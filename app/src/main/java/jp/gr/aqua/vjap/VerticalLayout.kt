@@ -169,6 +169,10 @@ class VerticalLayout {
         if (text != null) {
             this.text = text
 
+            if ( BOTTOM_SPACE < bodyStyle.fontSpace ){
+                BOTTOM_SPACE = bodyStyle.fontSpace.toInt()
+            }
+
             pageIndex.clear()
 
             var current = 0

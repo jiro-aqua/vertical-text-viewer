@@ -19,20 +19,15 @@ class PreferenceFragment : PreferenceFragmentCompat() {
 
         // IPAフォントについて
         ps.findPreference(Preferences.KEY_IPA)
-            .setOnPreferenceClickListener {
-                val message = context.assets.open("IPA_Font_License_Agreement_v1.0.txt").reader(charset=Charsets.UTF_8).use{it.readText()}
-                AlertDialog.Builder(context)
-                        .setTitle(R.string.about_ipa_font)
-                        .setMessage(message)
-                        .setPositiveButton(R.string.ok,null)
-                        .show()
+            .setOnPreferenceClickListener { showMessage(R.string.about_ipa_font , "IPA_Font_License_Agreement_v1.0.txt" ) }
 
-                false
-            }
+        // バージョン
+        ps.findPreference(Preferences.KEY_ABOUT)
+                .setSummary("version: ${BuildConfig.VERSION_NAME} (c)Aquamarine Networks.")
 
-//        // 文字数
-//        (ps.findPreference(Preferences.KEY_CHAR_MAX_PORT) as EditTextPreference)
-//                .getE
+        // IPAフォントについて
+        ps.findPreference(Preferences.KEY_USAGE)
+                .setOnPreferenceClickListener { showMessage(R.string.app_usage , "usage.txt" ) }
 
     }
 
@@ -51,4 +46,16 @@ class PreferenceFragment : PreferenceFragmentCompat() {
     }
 
     interface OnFragmentInteractionListener
+
+    private fun showMessage(titleResId : Int , assetText:String) : Boolean {
+        val message = context.assets.open(assetText).reader(charset=Charsets.UTF_8).use{it.readText()}
+        AlertDialog.Builder(context)
+                .setTitle(titleResId)
+                .setMessage(message)
+                .setPositiveButton(R.string.ok,null)
+                .show()
+
+        return false
+    }
+
 }
