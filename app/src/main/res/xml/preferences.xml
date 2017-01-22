@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:key="app_about"
+        android:title="@string/app_about"
+        >
+    </Preference>
+    <Preference
+        android:key="app_usage"
+        android:title="@string/app_usage"
+        >
+    </Preference>
+
+    <ListPreference
+        android:key="font_kind"
+        android:title="@string/font_kind"
+        android:entries="@array/font_kind"
+        android:entryValues="@array/font_kind_value"
+        android:defaultValue="mincho"
+        />
+
+    <ListPreference
+        android:key="font_size"
+        android:title="@string/font_size"
+        android:entries="@array/font_size"
+        android:entryValues="@array/font_size_value"
+        android:defaultValue="16"
+        />
+
+    <EditTextPreference
+        android:key="char_max_port"
+        android:title="@string/char_max_port"
+        android:defaultValue="0"
+        android:dialogLayout="@layout/preference_charmax"
+        />
+
+    <EditTextPreference
+        android:key="char_max_land"
+        android:title="@string/char_max_land"
+        android:defaultValue="0"
+        android:dialogLayout="@layout/preference_charmax"
+        />
+
+    <ListPreference
+        android:key="ruby_kind"
+        android:title="@string/ruby_kind"
+        android:entries="@array/ruby_kind"
+        android:entryValues="@array/ruby_kind_value"
+        android:defaultValue="aozora"
+        />
+
+    <Preference
+        android:key="about_ipa"
+        android:title="@string/about_ipa_font"
+        android:summary="@string/ipa_license">
+    </Preference>
+
+</PreferenceScreen>

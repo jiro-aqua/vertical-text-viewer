@@ -2,7 +2,29 @@
 <resources>
 
     <string name="app_name">縦書きPreviewer for Jota+</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="menu_settings">Settings</string>
+
+    <string name="ok">OK</string>
+    <string name="about_ipa_font">IPAフォントについて</string>
+    <string name="ipa_license">IPAフォントライセンスv1.0</string>
+
+    <string name="app_about">このアプリについて</string>
+    <string name="app_usage">使い方</string>
+
+    <string name="font_size">フォントのサイズ</string>
+    <string name="font_kind">フォントの種類</string>
+    <string name="font_kind_mincho">IPA明朝</string>
+    <string name="font_kind_gothic">IPAゴシック</string>
+
+    <string name="char_max_port">文字数(縦)</string>
+    <string name="char_max_land">文字数(横)</string>
+    <string name="char_max_summary">一行当たりの文字数を設定します</string>
+    <string name="char_max_hint">0:画面端で折返し</string>
+
+    <string name="ruby_kind">ルビ記号種類</string>
+    <string name="ruby_kind_aozora">青空文庫</string>
+    <string name="ruby_kind_bccks">BCCKS</string>
+    <string name="ruby_kind_pixiv">Pixiv</string>
+    <string name="ruby_kind_denden">でんでんコンバータ</string>
+    <string name="ruby_kind_html">HTML5</string>
 
 </resources>

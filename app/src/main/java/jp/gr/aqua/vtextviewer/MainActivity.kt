@@ -13,9 +13,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.main)
+        setContentView(R.layout.activity_main)
 
         val position = savedInstanceState?.getInt(KEY_POSITION) ?: 0
+
+        // 設定読込
+        val pr = Preferences(this)
+        val fontKind = pr.getFontKind()
+        val fontSet = if ( fontKind=="mincho") "ipam.ttf" to true else "ipag.ttf" to false
+        val fontSize = pr.getFontSize()
 
         if (intent.action == Intent.ACTION_SEND ) {
             val extras = intent.extras
@@ -23,9 +29,8 @@ class MainActivity : AppCompatActivity() {
                 val text = it.getCharSequence(Intent.EXTRA_TEXT)
                 text?.let{
                     vTextLayout.setText(it.toString())
-                    vTextLayout.setFont( resources.getDimension(R.dimen.font_size_middle).toInt() ,
-                            Typeface.createFromAsset( assets, "ipam.ttf") ,
-                            true )
+                    vTextLayout.setFont( fontSize * resources.getDimension(R.dimen.font_size_unit).toInt() ,
+                            Typeface.createFromAsset( assets, fontSet.first) , fontSet.second )
                     vTextLayout.setPadding( resources.getDimension(R.dimen.padding).toInt() )
                     vTextLayout.setInitialPosition( position )
                 }?:finish()

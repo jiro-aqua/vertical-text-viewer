@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="font_kind">
+        <item>@string/font_kind_mincho</item>
+        <item>@string/font_kind_gothic</item>
+    </array>
+    <array name="font_kind_value">
+        <item>mincho</item>
+        <item>gothic</item>
+    </array>
+
+    <string-array name="font_size">
+        <item>12sp</item>
+        <item>16sp</item>
+        <item>20sp</item>
+    </string-array>
+
+    <string-array name="font_size_value">
+        <item>12</item>
+        <item>16</item>
+        <item>20</item>
+    </string-array>
+
+    <string-array name="ruby_kind">
+        <item>@string/ruby_kind_aozora</item>
+        <item>@string/ruby_kind_bccks</item>
+        <item>@string/ruby_kind_denden</item>
+        <item>@string/ruby_kind_pixiv</item>
+        <item>@string/ruby_kind_html</item>
+    </string-array>
+
+    <string-array name="ruby_kind_value">
+        <item>aozora</item>
+        <item>bccks</item>
+        <item>denden</item>
+        <item>pixiv</item>
+        <item>html</item>
+    </string-array>
+
+</resources>

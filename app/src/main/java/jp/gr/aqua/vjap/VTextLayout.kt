@@ -50,7 +50,7 @@ class VTextLayout : RelativeLayout {
     }
 
     fun init(context: Context) {
-        LayoutInflater.from(context).inflate(R.layout.vtext, this)
+        LayoutInflater.from(context).inflate(R.layout.view_vtext, this)
 
         //アダプター作成
         adapter = object : PagerAdapter() {
