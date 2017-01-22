@@ -30,8 +30,10 @@ class VerticalLayout {
     private var text: String by Delegates.notNull<String>()
     private val pageIndex = ArrayList<Int>()
 
-    private var width: Int = 0
-    private var height: Int = 0
+    private var width  = 0
+    private var height = 0
+
+    private var wrapPosition = 0
 
     fun setSize(width: Int, height: Int) {
         this.width = width
@@ -51,6 +53,10 @@ class VerticalLayout {
         BOTTOM_SPACE = padding
         LEFT_SPACE = padding
         RIGHT_SPACE = padding
+    }
+
+    fun setWrapPosition(wrapPosition: Int) {
+        this.wrapPosition = wrapPosition
     }
 
     //文字描画関数
@@ -106,7 +112,9 @@ class VerticalLayout {
     //次の位置へカーソル移動　次の行が書ければtrue 端に到達したらfalse
     private fun goNext(pos: PointF, type: TextStyle, lineChangable: Boolean): Boolean {
         var newLine = false
-        if (pos.y + type.fontSpace > height - BOTTOM_SPACE) {
+        val wrapY : Float = if ( wrapPosition == 0) (height - BOTTOM_SPACE).toFloat() else TOP_SPACE + type.fontSpace * wrapPosition
+
+        if (pos.y + type.fontSpace > wrapY ) {
             // もう文字が入らない場合
             newLine = true
         }
@@ -312,10 +320,16 @@ class VerticalLayout {
         return true
     }
 
+    val KINSOKU = ",)]｝、〕〉》」』】〙〗〟’”｠»" +
+                    "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
+                    "‐゠–〜"+
+                    "？！?!‼⁇⁈⁉"+
+                    "・:;。."
+
     private fun checkLineChangable(state: CurrentState): Boolean {
         if (!state.lineChangable) {//連続で禁則処理はしない
             state.lineChangable = true
-        } else if ("。、」』）]］}｝〉】〕，．.,{".contains(state.sAfter)) {
+        } else if (KINSOKU.contains(state.sAfter)) {
             state.lineChangable = false
         }
         return state.lineChangable
@@ -352,8 +366,8 @@ class VerticalLayout {
 
     private inner class TextStyle internal constructor(size: Int) {
         internal var paint: Paint
-        internal var fontSpace: Float = 0.toFloat()
-        internal var lineSpace: Float = 0.toFloat()
+        internal var fontSpace = 0F
+        internal var lineSpace = 0F
 
         init {
             this.paint = Paint()

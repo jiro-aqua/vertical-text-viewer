@@ -37,6 +37,8 @@ class VTextLayout : RelativeLayout {
     private var contentText by Delegates.notNull<String>()
     private var position = 0
 
+    private var wrapPosition = 0
+
     constructor(context: Context) : super(context) {
         init(context)
     }
@@ -209,6 +211,10 @@ class VTextLayout : RelativeLayout {
         this.position = pos
     }
 
+    fun setWrapPosition(wrapPosition: Int) {
+        this.wrapPosition = wrapPosition
+    }
+
     fun getCurrentPosition(): Int {
         return layout.getPositionByPage(currentPage)
     }
@@ -229,6 +235,7 @@ class VTextLayout : RelativeLayout {
                 val width = viewPager.width
                 val height = viewPager.height
                 layout.setSize(width, height)
+                layout.setWrapPosition(wrapPosition)
                 val pageCount = layout.calcPages(contentText)
                 viewPager.totalPage = pageCount - 1
                 progressBar.visibility = View.GONE

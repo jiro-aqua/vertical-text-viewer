@@ -1,6 +1,7 @@
 package jp.gr.aqua.vtextviewer
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -22,6 +23,13 @@ class MainActivity : AppCompatActivity() {
         val fontKind = pr.getFontKind()
         val fontSet = if ( fontKind=="mincho") "ipam.ttf" to true else "ipag.ttf" to false
         val fontSize = pr.getFontSize()
+        val charMax = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // 縦向きの場合
+            pr.getCharMaxPort()
+        }else{
+            // 横向きの場合
+            pr.getCharMaxLand()
+        }
 
         if (intent.action == Intent.ACTION_SEND ) {
             val extras = intent.extras
@@ -29,10 +37,11 @@ class MainActivity : AppCompatActivity() {
                 val text = it.getCharSequence(Intent.EXTRA_TEXT)
                 text?.let{
                     vTextLayout.setText(it.toString())
-                    vTextLayout.setFont( fontSize * resources.getDimension(R.dimen.font_size_unit).toInt() ,
+                    vTextLayout.setFont( (fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt() ,
                             Typeface.createFromAsset( assets, fontSet.first) , fontSet.second )
                     vTextLayout.setPadding( resources.getDimension(R.dimen.padding).toInt() )
                     vTextLayout.setInitialPosition( position )
+                    vTextLayout.setWrapPosition( charMax )
                 }?:finish()
             }?:finish()
         }else{

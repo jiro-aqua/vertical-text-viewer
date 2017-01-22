@@ -32,12 +32,13 @@ class Preferences(context: Context){
 
     fun getCharMaxPort() : Int
     {
-        return sp.getString(KEY_CHAR_MAX_PORT,"0").toInt()
+        return sp.getString(KEY_CHAR_MAX_PORT,"0").toIntSafety()
     }
 
     fun getCharMaxLand() : Int
     {
-        return sp.getString(KEY_CHAR_MAX_LAND,"0").toInt()
+        return sp.getString(KEY_CHAR_MAX_LAND,"0").toIntSafety()
     }
 
+    fun String.toIntSafety() : Int = if ( this.isEmpty() ) 0 else this.toInt()
 }
