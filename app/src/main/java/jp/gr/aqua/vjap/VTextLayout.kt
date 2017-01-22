@@ -38,6 +38,7 @@ class VTextLayout : RelativeLayout {
     private var position = 0
 
     private var wrapPosition = 0
+    private var rubyMode = ""
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -215,6 +216,10 @@ class VTextLayout : RelativeLayout {
         this.wrapPosition = wrapPosition
     }
 
+    fun setRubyMode(rubyMode : String) {
+        this.rubyMode = rubyMode
+    }
+
     fun getCurrentPosition(): Int {
         return layout.getPositionByPage(currentPage)
     }
@@ -236,6 +241,7 @@ class VTextLayout : RelativeLayout {
                 val height = viewPager.height
                 layout.setSize(width, height)
                 layout.setWrapPosition(wrapPosition)
+                layout.setRubyMode(rubyMode)
                 val pageCount = layout.calcPages(contentText)
                 viewPager.totalPage = pageCount - 1
                 progressBar.visibility = View.GONE

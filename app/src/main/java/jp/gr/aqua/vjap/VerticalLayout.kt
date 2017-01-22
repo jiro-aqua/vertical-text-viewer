@@ -34,6 +34,7 @@ class VerticalLayout {
     private var height = 0
 
     private var wrapPosition = 0
+    private var ruby by Delegates.notNull<Ruby>()
 
     fun setSize(width: Int, height: Int) {
         this.width = width
@@ -57,6 +58,10 @@ class VerticalLayout {
 
     fun setWrapPosition(wrapPosition: Int) {
         this.wrapPosition = wrapPosition
+    }
+
+    fun setRubyMode(rubyMode : String) {
+        ruby = Rubys(rubyMode).getRuby()
     }
 
     //文字描画関数
@@ -112,9 +117,13 @@ class VerticalLayout {
     //次の位置へカーソル移動　次の行が書ければtrue 端に到達したらfalse
     private fun goNext(pos: PointF, type: TextStyle, lineChangable: Boolean): Boolean {
         var newLine = false
-        val wrapY : Float = if ( wrapPosition == 0) (height - BOTTOM_SPACE).toFloat() else TOP_SPACE + type.fontSpace * wrapPosition
 
-        if (pos.y + type.fontSpace > wrapY ) {
+        val bottomY = (height - BOTTOM_SPACE).toFloat()
+        val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
+
+        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+
+        if (pos.y + type.fontSpace > wrap ) {
             // もう文字が入らない場合
             newLine = true
         }
@@ -214,17 +223,15 @@ class VerticalLayout {
         while (index < text.length) {
             state.lineChangable = true
             state.strPrev = state.str
-            state.str = text[index] + ""
-            state.sAfter = if (index + 1 < text.length)
-                text[index + 1] + ""
-            else
-                ""
+            state.str = text.characterAt(index)
+            val len = state.str.length
+            state.sAfter = if (index + len < text.length) text.characterAt(index + len)  else ""
 
             if (!charDrawProcess(canvas, state)) {
                 endFlag = false
                 break
             }
-            index++
+            index += len
         }
         //this.isPageEnd = endFlag;
         if (canvas == null) {
@@ -232,6 +239,32 @@ class VerticalLayout {
         }
         return endFlag
     }
+
+    private fun String.characterAt(i : Int) : String {
+        val c1 = this[i]
+        if ( UnicodeBlock.of(c1) == UnicodeBlock.HIGH_SURROGATES ){
+            val c2 = this[i+1]
+            val s = c1.toString() + c2.toString()
+            return s
+        }
+        if ( this.startsWith(ruby.bodyStart1, startIndex = i) ){
+            return ruby.bodyStart1
+        }
+        if ( ruby.bodyStart2 != null ) {
+            if (this.startsWith(ruby.bodyStart2!!, startIndex = i)) {
+                return ruby.bodyStart2!!
+            }
+        }
+        if ( this.startsWith(ruby.rubyStart, startIndex = i) ){
+            return ruby.rubyStart
+        }
+        if ( this.startsWith(ruby.rubyEnd, startIndex = i) ){
+            return ruby.rubyEnd
+        }
+        return c1.toString()
+    }
+
+
 
     private fun charDrawProcess(canvas: Canvas?, state: CurrentState): Boolean {
 
@@ -244,7 +277,7 @@ class VerticalLayout {
                 state.isRubyBody = false
             }
 
-            if (state.str == "|" || state.str == "｜") {            //ルビ本体開始
+            if (state.str == ruby.bodyStart1 || state.str == ruby.bodyStart2 ) {            //ルビ本体開始
                 //ルビ開始中にルビ開始した場合は出力
                 if (state.bodyText.isNotEmpty()) {
                     drawString(canvas, state.buf + state.bodyText, state.pos, bodyStyle )
@@ -257,14 +290,14 @@ class VerticalLayout {
                 state.rubyStart = getHeadPos(state.pos)
                 return true
             }
-            if (state.str == "《" && //ルビ開始
+            if (state.str == ruby.rubyStart && //ルビ開始
                     (state.isRubyBody || state.isKanjiBlock)) { //ルビ開始状態であれば
                 state.isRuby = true
                 state.isRubyBody = false
                 state.rubyText = ""
                 return true
             }
-            if (state.str == "》" && state.isRuby) {    //ルビ終了
+            if (state.str == ruby.rubyEnd && state.isRuby) {    //ルビ終了
                 drawString(canvas, state.bodyText, state.pos, bodyStyle )
                 state.rpos = getRubyPos(state)
                 drawString(canvas, state.rubyText, state.rpos, rubyStyle )
@@ -274,17 +307,19 @@ class VerticalLayout {
                 return !state.isPageEnd
             }
 
-            //漢字判定はルビ開始判定の後に行う必要あり
-            val isKanji = UnicodeBlock.of(state.str[0]) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
-            //Log.d("kanji",state.str +":" + isKanji+state.isKanjiBlock);
-            if (isKanji && !state.isKanjiBlock) {
-                //漢字が始まったら漢字ブロックフラグを立てる
-                //　｜のルビ本体の中でなければ
-                if (!state.isRubyBody) {
-                    state.rubyStart = getHeadPos(state.pos)
+            state.isKanjiBlock = if ( ruby.aozora ) {
+                //漢字判定はルビ開始判定の後に行う必要あり
+                val isKanji = UnicodeBlock.of(state.str[0]) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                //Log.d("kanji",state.str +":" + isKanji+state.isKanjiBlock);
+                if (isKanji && !state.isKanjiBlock) {
+                    //漢字が始まったら漢字ブロックフラグを立てる
+                    //　｜のルビ本体の中でなければ
+                    if (!state.isRubyBody) {
+                        state.rubyStart = getHeadPos(state.pos)
+                    }
                 }
-            }
-            state.isKanjiBlock = isKanji
+                isKanji
+            }else false
 
             if (state.isRuby) {
                 state.rubyText += state.str
@@ -389,7 +424,6 @@ class VerticalLayout {
         }
 
     companion object {
-
         private val FONT_COLOR = Color.BLACK
     }
 }

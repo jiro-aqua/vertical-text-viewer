@@ -41,4 +41,10 @@ class Preferences(context: Context){
     }
 
     fun String.toIntSafety() : Int = if ( this.isEmpty() ) 0 else this.toInt()
+
+    fun getRubyMode() : String
+    {
+        return sp.getString(KEY_RUBY_KIND,"aozora")
+    }
+
 }

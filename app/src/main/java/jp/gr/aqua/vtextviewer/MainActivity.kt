@@ -30,18 +30,22 @@ class MainActivity : AppCompatActivity() {
             // 横向きの場合
             pr.getCharMaxLand()
         }
+        val rubyMode = pr.getRubyMode()
 
         if (intent.action == Intent.ACTION_SEND ) {
             val extras = intent.extras
             extras?.let{
                 val text = it.getCharSequence(Intent.EXTRA_TEXT)
                 text?.let{
-                    vTextLayout.setText(it.toString())
-                    vTextLayout.setFont( (fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt() ,
-                            Typeface.createFromAsset( assets, fontSet.first) , fontSet.second )
-                    vTextLayout.setPadding( resources.getDimension(R.dimen.padding).toInt() )
-                    vTextLayout.setInitialPosition( position )
-                    vTextLayout.setWrapPosition( charMax )
+                    vTextLayout.apply{
+                        setText(it.toString())
+                        setFont( (fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt() ,
+                                Typeface.createFromAsset( assets, fontSet.first) , fontSet.second )
+                        setPadding( resources.getDimension(R.dimen.padding).toInt() )
+                        setInitialPosition( position )
+                        setWrapPosition( charMax )
+                        setRubyMode(rubyMode)
+                    }
                 }?:finish()
             }?:finish()
         }else{
@@ -59,9 +63,11 @@ class MainActivity : AppCompatActivity() {
                 extras?.let {
                     val text = it.getCharSequence(Intent.EXTRA_TEXT)
                     text?.let {
-                        vTextLayout.setText(it.toString())
-                        //vTextLayout.setInitialPosition(position)
-                        vTextLayout.reLayoutChildren()
+                        vTextLayout.apply{
+                            setText(it.toString())
+                            //setInitialPosition(position)
+                            reLayoutChildren()
+                        }
                     }
                 }
             }
