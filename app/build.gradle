@@ -30,6 +30,10 @@ dependencies {
     compile 'com.android.support:preference-v7:25.1.0'
     compile 'com.android.support:preference-v14:25.1.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'io.reactivex:rxjava:1.1.1'
+    compile 'io.reactivex:rxandroid:1.1.0'
+    compile 'io.reactivex:rxkotlin:0.40.1'
+
 }
 repositories {
     mavenCentral()

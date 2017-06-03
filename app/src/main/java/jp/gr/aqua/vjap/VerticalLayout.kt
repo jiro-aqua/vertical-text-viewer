@@ -176,12 +176,12 @@ class VerticalLayout {
             pageIndex.clear()
 
             var current = 0
-            Log.d("page", current.toString() + "")
+//            Log.d("page", current.toString() + "")
             while (!textDraw(null, current)) {
                 //描画を無効化して最後のページになるまで進める。
                 current++
             }
-            Log.d("page", current.toString() + "")
+//            Log.d("page", current.toString() + "")
 
             return pageIndex.size
         } else {
@@ -193,8 +193,12 @@ class VerticalLayout {
         val pageSize = pageIndex.size
         if (pageSize > 1) {
             (0..pageSize - 1 - 1)
-                    .filter { pageIndex[it] <= position && position <= pageIndex[it + 1] }
-                    .forEach { return it + 1 }
+                    .filter { position < pageIndex[it] }
+                    .forEach {
+                        //Log.d("====>","$it,$position,$pageIndex")
+                        return it + 1
+                    }
+            return pageSize
         }
         return 1
     }
@@ -204,11 +208,27 @@ class VerticalLayout {
         if (pageSize <= page) {
             return pageIndex[pageSize - 1]
         }
-        val from = pageIndex[page - 1]
-        val to = pageIndex[page]
-        return (from + to) / 2
+        if ( page == 1 ){
+            return 0
+        }else{
+            val from = pageIndex[page - 2]
+            val to = pageIndex[page - 1]
+            return (from + to) / 2
+        }
     }
 
+    fun getStartPositionByPage(page: Int): Int {
+        val pageSize = pageIndex.size
+        if (pageSize <= page) {
+            return pageIndex[pageSize - 1]
+        }
+        if ( page == 1 ){
+            return 0
+        }else{
+            val from = pageIndex[page - 2]
+            return from
+        }
+    }
 
     fun textDraw(canvas: Canvas?, page: Int): Boolean {
         val state = CurrentState()

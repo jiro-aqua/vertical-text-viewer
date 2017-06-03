@@ -1,16 +1,26 @@
 package jp.gr.aqua.vtextviewer
 
+import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import jp.gr.aqua.vjap.VTextLayout
+import rx.Single
+import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
 
     private val KEY_POSITION = "position"
     private val vTextLayout by lazy { findViewById(R.id.vTextLayout) as VTextLayout }
+
+    private val intentAction = "jp.gr.aqua.jota.vtextviewer.ACTION_OPEN"
+    private val mimeType = "text/plain"
+    private val EXTRA_START = "EXTRA_START"
+    private val EXTRA_END = "EXTRA_END"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,20 +44,60 @@ class MainActivity : AppCompatActivity() {
 
         if (intent.action == Intent.ACTION_SEND ) {
             val extras = intent.extras
-            extras?.let{
+            extras?.let {
                 val text = it.getCharSequence(Intent.EXTRA_TEXT)
-                text?.let{
-                    vTextLayout.apply{
+                text?.let {
+                    vTextLayout.apply {
                         setText(it.toString())
-                        setFont( (fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt() ,
-                                Typeface.createFromAsset( assets, fontSet.first) , fontSet.second )
-                        setPadding( resources.getDimension(R.dimen.padding).toInt() )
-                        setInitialPosition( position )
-                        setWrapPosition( charMax )
+                        setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
+                                Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
+                        setPadding(resources.getDimension(R.dimen.padding).toInt())
+                        setInitialPosition(position)
+                        setWrapPosition(charMax)
                         setRubyMode(rubyMode)
                     }
-                }?:finish()
-            }?:finish()
+                } ?: finish()
+            } ?: finish()
+        }else if(intent.action == intentAction ){
+            val start = intent.getIntExtra(EXTRA_START,0);
+            val end = intent.getIntExtra(EXTRA_END,0);
+
+            val uri = intent.data
+            vTextLayout.apply {
+                setText("")
+                setInitialPosition(position)
+                setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
+                        Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
+                setPadding(resources.getDimension(R.dimen.padding).toInt())
+                setWrapPosition(charMax)
+                setRubyMode(rubyMode)
+            }
+
+            Single.just(uri)
+                    .subscribeOn(Schedulers.io())
+                    .map { loadContent(it) }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            {
+                                text ->
+                                text?.let {
+                                    vTextLayout.apply{
+                                        setText(it)
+                                        if ( position == 0 ){
+                                            setInitialPosition((start+end)/2)
+                                        }
+                                        reLayoutChildren()
+                                    }
+                                } ?: finish()
+                            },
+                            {
+                                it.printStackTrace()
+                                finish()
+                            }
+                    )
+
+
+
         }else{
             finish()
         }
@@ -85,5 +135,21 @@ class MainActivity : AppCompatActivity() {
             vTextLayout.setInitialPosition(it)
         }
     }
+
+    @Throws(Exception::class)
+    private fun loadContent(uri: Uri): String {
+        return contentResolver.openInputStream(uri).bufferedReader(charset = Charsets.UTF_8).use { it.readText() }
+    }
+
+    override fun onBackPressed() {
+        val intent = intent.apply{
+            val position = vTextLayout.getCurrentStartPosition()
+            putExtra(EXTRA_START,position)
+            putExtra(EXTRA_END,position)
+        }
+        setResult(Activity.RESULT_OK,intent)
+        super.onBackPressed()
+    }
+
 
 }

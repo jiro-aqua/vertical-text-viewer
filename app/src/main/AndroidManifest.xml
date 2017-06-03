@@ -13,6 +13,7 @@
             android:launchMode="singleInstance"
             >
             <intent-filter>
+                <action android:name="jp.gr.aqua.jota.vtextviewer.ACTION_OPEN" />
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/*" />

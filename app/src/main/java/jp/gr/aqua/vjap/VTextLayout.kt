@@ -224,6 +224,10 @@ class VTextLayout : RelativeLayout {
         return layout.getPositionByPage(currentPage)
     }
 
+    fun getCurrentStartPosition(): Int {
+        return layout.getStartPositionByPage(currentPage)
+    }
+
     fun reLayoutChildren() {
         setOnLayoutListener()
         measure(
