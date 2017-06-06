@@ -533,6 +533,9 @@ class VerticalLayout {
                         next = result.last()
                         result.remove(next)
                     } else {
+                        if ( next.first == "\n" ){
+                            idx += next.first.length
+                        }
                         break
                     }
                 }
