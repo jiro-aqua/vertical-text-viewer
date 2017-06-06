@@ -15,6 +15,8 @@ import kotlin.properties.Delegates
 
 class VerticalLayout {
 
+    private val DEBUG = false
+
     private var TOP_SPACE = 18
     private var BOTTOM_SPACE = 18
     private var LEFT_SPACE = 18
@@ -35,6 +37,8 @@ class VerticalLayout {
 
     private var wrapPosition = 0
     private var ruby by Delegates.notNull<Ruby>()
+
+    private val lines = ArrayList<ArrayList<Pair<String,Int>>>()
 
     fun setSize(width: Int, height: Int) {
         this.width = width
@@ -100,7 +104,7 @@ class VerticalLayout {
     private fun drawString(canvas: Canvas?, s: String, pos: PointF, style: TextStyle): Boolean {
         for (i in 0..s.length - 1) {
             canvas?.let{ drawChar(canvas, s[i] + "", pos, style) }
-            if (!goNext(pos, style, true)) {
+            if (!goNext(pos, style)) {
                 return false
             }
         }
@@ -115,28 +119,28 @@ class VerticalLayout {
     }
 
     //次の位置へカーソル移動　次の行が書ければtrue 端に到達したらfalse
-    private fun goNext(pos: PointF, type: TextStyle, lineChangable: Boolean): Boolean {
-        var newLine = false
-
-        val bottomY = (height - BOTTOM_SPACE).toFloat()
-        val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
-
-        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
-
-        if (pos.y + type.fontSpace > wrap ) {
-            // もう文字が入らない場合
-            newLine = true
-        }
-
-        if (newLine && lineChangable) {
-            // 改行処理
-            return goNextLine(pos, type, 1f)
-        } else {
-            // 文字を送る
-            val fontSpace = type.fontSpace
-            //if(checkHalf( s )) fontSpace /= 2;
-            pos.y += fontSpace
-        }
+    private fun goNext(pos: PointF, type: TextStyle): Boolean {
+//        var newLine = false
+//
+//        val bottomY = (height - BOTTOM_SPACE).toFloat()
+//        val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
+//
+//        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+//
+//        if (pos.y + type.fontSpace > wrap ) {
+//            // もう文字が入らない場合
+//            newLine = true
+//        }
+//
+//        if (newLine && lineChangable) {
+//            // 改行処理
+//            return goNextLine(pos, type, 1f)
+//        } else {
+//        }
+        // 文字を送る
+        val fontSpace = type.fontSpace
+        //if(checkHalf( s )) fontSpace /= 2;
+        pos.y += fontSpace
         return true
     }
 
@@ -177,11 +181,45 @@ class VerticalLayout {
 
             var current = 0
 //            Log.d("page", current.toString() + "")
-            while (!textDraw(null, current)) {
-                //描画を無効化して最後のページになるまで進める。
-                current++
-            }
+//            while (!textDraw(null, current)) {
+//                //描画を無効化して最後のページになるまで進める。
+//                current++
+//            }
 //            Log.d("page", current.toString() + "")
+
+            var idx = 0
+            lines.clear()
+            while( idx >= 0 ){
+                val line = calcLine(text , idx)
+                if ( line.second >= 0 ) {
+                    lines.add(line.first)
+                }
+                idx = line.second
+                if ( DEBUG ) {
+                    var str = ""
+                    line.first.forEach {
+                        str += it.first
+                    }
+                    Log.d("===>", str)
+                }
+            }
+            // PageIndexの計算
+            val state = CurrentState()
+            initPos(state.pos)
+            initPos(state.rpos)
+            lines.forEachIndexed {
+                lineidx, list ->
+                if ( state.pos.x < LEFT_SPACE ){
+                    pageIndex.add(lineidx)
+                    initPos(state.pos)
+                }
+                if ( list.size > 0 ){
+                    state.pos.x -= bodyStyle.lineSpace
+                }else{
+                    state.pos.x -= bodyStyle.lineSpace / 2
+                }
+            }
+            pageIndex.add(lines.size-1)
 
             return pageIndex.size
         } else {
@@ -189,11 +227,26 @@ class VerticalLayout {
         }
     }
 
+    fun getIndexFromPage(page:Int):Int {
+        val line = lines[pageIndex[page]]
+        if ( line.size > 0 ) {
+            return line[0].second
+        }else{ // 空行の時は後ろの行を探す
+            ( pageIndex[page] .. pageIndex.last() ).forEach{
+                val theLine = lines[it]
+                if ( theLine.size > 0 ){
+                    return theLine[0].second
+                }
+            }
+            return text.lastIndex
+        }
+    }
+
     fun getPageByPosition(position: Int): Int {
         val pageSize = pageIndex.size
         if (pageSize > 1) {
             (0..pageSize - 1 - 1)
-                    .filter { position < pageIndex[it] }
+                    .filter { position < getIndexFromPage(it) }
                     .forEach {
                         //Log.d("====>","$it,$position,$pageIndex")
                         return it + 1
@@ -206,13 +259,13 @@ class VerticalLayout {
     fun getPositionByPage(page: Int): Int {
         val pageSize = pageIndex.size
         if (pageSize <= page) {
-            return pageIndex[pageSize - 1]
+            return getIndexFromPage(pageSize - 1)
         }
         if ( page == 1 ){
             return 0
         }else{
-            val from = pageIndex[page - 2]
-            val to = pageIndex[page - 1]
+            val from = getIndexFromPage(page - 2)
+            val to = getIndexFromPage(page - 1)
             return (from + to) / 2
         }
     }
@@ -220,16 +273,16 @@ class VerticalLayout {
     fun getStartPositionByPage(page: Int): Int {
         val pageSize = pageIndex.size
         if (pageSize <= page) {
-            return pageIndex[pageSize - 1]
+            return getIndexFromPage(pageSize - 1)
         }
         if ( page == 1 ){
             return 0
         }else{
-            val from = pageIndex[page - 2]
+            val from = getIndexFromPage(page - 2)
             return from
         }
-    }
 
+    }
     fun textDraw(canvas: Canvas?, page: Int): Boolean {
         val state = CurrentState()
         initPos(state.pos)
@@ -244,22 +297,18 @@ class VerticalLayout {
         }
 
         //描画
-        while (index < text.length) {
-            state.lineChangable = true
-            state.strPrev = state.str
-            state.str = text.characterAt(index)
-            val len = state.str.length
-            state.sAfter = if (index + len < text.length) text.characterAt(index + len)  else ""
+        while (index < lines.size) {
 
-            if (!charDrawProcess(canvas, state)) {
-                endFlag = false
-                break
+            val line = lines[index]
+            line.forEach {
+                state.str = it.first
+                charDrawProcess(canvas, state)
             }
-            index += len
-        }
-        //this.isPageEnd = endFlag;
-        if (canvas == null) {
-            pageIndex.add(index + 1)
+
+            //改行処理
+            val lineSize = if (line.size > 0) { 1.0F }else { 0.5F }
+            if ( !goNextLine(state.pos, bodyStyle, lineSize) ) break
+            index ++
         }
         return endFlag
     }
@@ -332,6 +381,7 @@ class VerticalLayout {
             }
 
             state.isKanjiBlock = if ( ruby.aozora ) {
+
                 //漢字判定はルビ開始判定の後に行う必要あり
                 val isKanji = UnicodeBlock.of(state.str[0]) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
                 //Log.d("kanji",state.str +":" + isKanji+state.isKanjiBlock);
@@ -359,19 +409,19 @@ class VerticalLayout {
         //タイトルならスタイル変更
         val style = bodyStyle
 
-        //改行処理
-        if (state.str == "\n") {
-            if (state.strPrev == "\n") {
-                return this.goNextLine(state.pos, style, 0.5.toFloat())
-            } else {
-                return this.goNextLine(state.pos, style, 1f)
-            }
-
-        }
+//        //改行処理
+//        if (state.str == "\n") {
+//            if (state.strPrev == "\n") {
+//                return this.goNextLine(state.pos, style, 0.5.toFloat())
+//            } else {
+//                return this.goNextLine(state.pos, style, 1f)
+//            }
+//
+//        }
         //文字を描画して次へ
         this.drawChar(canvas, state.str, state.pos, style )
 
-        if (!this.goNext(state.pos, style, checkLineChangable(state))) {
+        if (!this.goNext(state.pos, style)) {
             state.isPageEnd = true
             //ルビがある場合はルビを描画してから終了
             return state.isRubyBody
@@ -379,11 +429,132 @@ class VerticalLayout {
         return true
     }
 
-    val KINSOKU = ",)]｝、〕〉》」』】〙〗〟’”｠»" +
+    private fun calcLine(text:String , index:Int): Pair< ArrayList<Pair<String,Int>> , Int > {
+
+        val result = ArrayList<Pair<String,Int>>()
+
+        // 文字幅
+        val fontSpace = bodyStyle.fontSpace
+
+        val bottomY = (height - BOTTOM_SPACE).toFloat()
+        val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
+
+        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+
+        //if(checkHalf( s )) fontSpace /= 2;
+        var pos = 0f
+
+        var idx = index
+
+        var isRuby = false
+        var broken = false
+
+        while( idx < text.length ){
+            val str = text.characterAt(idx)
+            val len = str.length
+
+            //ルビが振られている箇所とルビ部分の判定
+            if (str == ruby.bodyStart1 || str == ruby.bodyStart2 ) {            //ルビ本体開始
+                result.add(str to idx)
+                idx += len
+                continue
+            }
+            if (str == ruby.rubyStart ) { //ルビ開始状態であれば
+                result.add(str to idx)
+                idx += len
+                isRuby = true
+                continue
+            }
+            if (str == ruby.rubyEnd ) {    //ルビ終了
+                result.add(str to idx)
+                idx += len
+                isRuby = false
+                continue
+            }
+            if (isRuby) {
+                result.add(str to idx)
+                idx += len
+                continue
+            }
+            //その他通常描字
+
+            //タイトルならスタイル変更
+            val style = bodyStyle
+
+            //改行処理
+            if (str == "\n") {
+                idx += len
+                broken = true
+                break
+            }
+
+            val setting = CharSetting.getSetting(str)
+            val fontSpacing = style.fontSpace//paint.getFontSpacing();
+            //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
+            val isLatin = UnicodeBlock.of(str[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
+            if (isLatin) {
+                if (setting != null && setting.angle != 0.0f) {
+                    pos -= fontSpacing / 2
+                }
+            }
+
+            pos += fontSpace
+
+            // 行端を超えた場合終了
+            if ( pos > wrap ){
+                break
+            }
+
+            //文字を描画して次へ
+            result.add(str to idx)
+            idx += len
+        }
+
+        if ( !broken ) {
+            // 次の行の行頭を作成
+            var next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
+
+            // 禁則文字なら、とりあえずぶら下げる
+            if (KINSOKU.contains(next.first)) {
+                result.add(next)
+                idx += next.first.length
+                next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
+            }
+
+            // 次の行をチェック
+            if (pos > wrap) {
+                val firstIdx = idx
+                val firstResult = ArrayList<Pair<String, Int>>()
+                firstResult.addAll(result)
+
+                while (result.size > 0) {
+                    if (KINSOKU.contains(next.first)) {
+                        idx = result.last().second
+                        next = result.last()
+                        result.remove(next)
+                    } else {
+                        break
+                    }
+                }
+                // 戻しすぎた時は、元の文字列を使用する
+                if (result.size == 0) {
+                    result.addAll(firstResult)
+                    idx = firstIdx
+                }
+            }
+        }
+        if ( idx >= text.length ){
+            idx = -1
+        }
+        return result to idx
+    }
+
+
+    val KINSOKU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
                     "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
                     "‐゠–〜"+
                     "？！?!‼⁇⁈⁉"+
-                    "・:;。."
+                    "・:;。.　 "
 
     private fun checkLineChangable(state: CurrentState): Boolean {
         if (!state.lineChangable) {//連続で禁則処理はしない

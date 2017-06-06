@@ -62,7 +62,7 @@ class VTextLayout : RelativeLayout {
                 //ReversedViewPagerはsetCurrentItemを上書きしているが、ここで来るpositionは生のモノ
                 val page = ReversedViewPager.MAX_PAGE - position - 1
 
-                val view = VTextView(mContext)
+                val view = VTextView(context)
                 view.setLayout(layout, page)
                 container.addView(view)
                 return view
