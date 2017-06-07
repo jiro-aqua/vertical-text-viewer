@@ -95,7 +95,7 @@ class VTextLayout : RelativeLayout {
                 currentPage = position
                 updatePageText()
 
-                Log.d("page=", currentPage.toString() + "")
+                //Log.d("page=", currentPage.toString() + "")
             }
 
             override fun onPageScrollStateChanged(arg0: Int) {}

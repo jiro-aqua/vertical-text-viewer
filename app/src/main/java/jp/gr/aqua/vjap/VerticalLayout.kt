@@ -525,8 +525,8 @@ class VerticalLayout {
                 // 次の行の行頭を作成
                 var next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
 
-                // 禁則文字なら、とりあえずぶら下げる
-                if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
+                // ぶら下げ禁則文字をぶら下げる
+                if (!ruby.isRubyMarkup(next.first) && KINSOKU_BURASAGE.contains(next.first)) {
                     result.add(next)
                     idx += next.first.length
                     next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
@@ -564,6 +564,8 @@ class VerticalLayout {
         return result to idx
     }
 
+    val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
+            "。.　 "
 
     val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
                     "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
