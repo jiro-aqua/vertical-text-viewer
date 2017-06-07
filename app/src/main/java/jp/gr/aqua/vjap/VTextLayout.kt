@@ -14,6 +14,8 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import jp.gr.aqua.vtextviewer.R
+import rx.Observable
+import rx.android.schedulers.AndroidSchedulers
 import kotlin.properties.Delegates
 
 
@@ -243,16 +245,6 @@ class VTextLayout : RelativeLayout {
             override fun onGlobalLayout() {
                 val width = viewPager.width
                 val height = viewPager.height
-                layout.setSize(width, height)
-                layout.setWrapPosition(wrapPosition)
-                layout.setRubyMode(rubyMode)
-                val pageCount = layout.calcPages(contentText)
-                viewPager.totalPage = pageCount - 1
-                progressBar.visibility = View.GONE
-
-                currentPage = layout.getPageByPosition(position)
-                updatePageText()
-                viewPager.setCurrentItem(currentPage, false)
 
                 val vtoo = viewTreeObserver
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -260,6 +252,21 @@ class VTextLayout : RelativeLayout {
                 } else {
                     vtoo.removeGlobalOnLayoutListener(this)
                 }
+
+                Observable.just( 1 )
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe {
+                            layout.setSize(width, height)
+                            layout.setWrapPosition(wrapPosition)
+                            layout.setRubyMode(rubyMode)
+                            val pageCount = layout.calcPages(contentText)
+                            viewPager.totalPage = pageCount - 1
+                            progressBar.visibility = View.GONE
+
+                            currentPage = layout.getPageByPosition(position)
+                            updatePageText()
+                            viewPager.setCurrentItem(currentPage, false)
+                        }
             }
         })
     }
