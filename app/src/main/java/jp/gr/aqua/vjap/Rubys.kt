@@ -5,6 +5,16 @@ data class Ruby( val bodyStart1 : String ,
                   val rubyStart : String ,
                   val rubyEnd : String ,
                  val aozora : Boolean = false) {
+
+    fun isRubyMarkup(str:String) : Boolean {
+        return when(str) {
+            bodyStart1 -> true
+            bodyStart2 -> true
+            rubyEnd -> true
+            rubyStart -> true
+            else -> false
+        }
+    }
 }
 
 class Rubys( val mode : String ) {

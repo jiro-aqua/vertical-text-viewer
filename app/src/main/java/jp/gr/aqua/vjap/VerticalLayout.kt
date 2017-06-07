@@ -70,6 +70,7 @@ class VerticalLayout {
 
     //文字描画関数
     private fun drawChar(canvas: Canvas?, s: String, pos: PointF, style: TextStyle) {
+        if ( s.isEmpty() ) return
         val setting = CharSetting.getSetting(s)
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
@@ -191,9 +192,7 @@ class VerticalLayout {
             lines.clear()
             while( idx >= 0 ){
                 val line = calcLine(text , idx)
-                if ( line.second >= 0 ) {
-                    lines.add(line.first)
-                }
+                lines.add(line.first)
                 idx = line.second
                 if ( DEBUG ) {
                     var str = ""
@@ -360,7 +359,7 @@ class VerticalLayout {
                 state.bodyText = ""
                 state.buf = state.str
                 state.isRubyBody = true
-                state.rubyStart = getHeadPos(state.pos)
+                state.isRubyBodyStarted = true
                 return true
             }
             if (state.str == ruby.rubyStart && //ルビ開始
@@ -383,7 +382,8 @@ class VerticalLayout {
             state.isKanjiBlock = if ( ruby.aozora ) {
 
                 //漢字判定はルビ開始判定の後に行う必要あり
-                val isKanji = UnicodeBlock.of(state.str[0]) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                val isKanji = state.str.isNotEmpty() && ( UnicodeBlock.of(state.str[0]) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS || state.str=="々" || state.str=="〆" )
+
                 //Log.d("kanji",state.str +":" + isKanji+state.isKanjiBlock);
                 if (isKanji && !state.isKanjiBlock) {
                     //漢字が始まったら漢字ブロックフラグを立てる
@@ -395,6 +395,10 @@ class VerticalLayout {
                 isKanji
             }else false
 
+            if ( state.isRubyBodyStarted ){
+                state.rubyStart = getHeadPos(state.pos)
+                state.isRubyBodyStarted = false
+            }
             if (state.isRuby) {
                 state.rubyText += state.str
                 return true
@@ -510,39 +514,47 @@ class VerticalLayout {
             idx += len
         }
 
-        if ( !broken ) {
-            // 次の行の行頭を作成
-            var next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
+        if ( !broken && result.isNotEmpty()) {
+            // 行末禁則のチェック
+            val last = result.last()
+            if ( !ruby.isRubyMarkup(last.first) && KINSOKU_GYOUMATU.contains(last.first)) {
+                result.remove(last)
+                idx = last.second
+            }else {
 
-            // 禁則文字なら、とりあえずぶら下げる
-            if (KINSOKU.contains(next.first)) {
-                result.add(next)
-                idx += next.first.length
-                next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
-            }
+                // 次の行の行頭を作成
+                var next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
 
-            // 次の行をチェック
-            if (pos > wrap) {
-                val firstIdx = idx
-                val firstResult = ArrayList<Pair<String, Int>>()
-                firstResult.addAll(result)
-
-                while (result.size > 0) {
-                    if (KINSOKU.contains(next.first)) {
-                        idx = result.last().second
-                        next = result.last()
-                        result.remove(next)
-                    } else {
-                        if ( next.first == "\n" ){
-                            idx += next.first.length
-                        }
-                        break
-                    }
+                // 禁則文字なら、とりあえずぶら下げる
+                if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
+                    result.add(next)
+                    idx += next.first.length
+                    next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
                 }
-                // 戻しすぎた時は、元の文字列を使用する
-                if (result.size == 0) {
-                    result.addAll(firstResult)
-                    idx = firstIdx
+
+                // 次の行をチェック
+                if (pos > wrap) {
+                    val firstIdx = idx
+                    val firstResult = ArrayList<Pair<String, Int>>()
+                    firstResult.addAll(result)
+
+                    while (result.size > 0) {
+                        if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
+                            idx = result.last().second
+                            next = result.last()
+                            result.remove(next)
+                        } else {
+                            if (next.first == "\n") {
+                                idx += next.first.length
+                            }
+                            break
+                        }
+                    }
+                    // 戻しすぎた時は、元の文字列を使用する
+                    if (result.size == 0) {
+                        result.addAll(firstResult)
+                        idx = firstIdx
+                    }
                 }
             }
         }
@@ -553,23 +565,25 @@ class VerticalLayout {
     }
 
 
-    val KINSOKU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
+    val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
                     "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
                     "‐゠–〜"+
                     "？！?!‼⁇⁈⁉"+
                     "・:;。.　 "
 
-    private fun checkLineChangable(state: CurrentState): Boolean {
-        if (!state.lineChangable) {//連続で禁則処理はしない
-            state.lineChangable = true
-        } else if (KINSOKU.contains(state.sAfter)) {
-            state.lineChangable = false
-        }
-        return state.lineChangable
-    }
+    val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
+
+//    private fun checkLineChangable(state: CurrentState): Boolean {
+//        if (!state.lineChangable) {//連続で禁則処理はしない
+//            state.lineChangable = true
+//        } else if (KINSOKU_GYOUTOU.contains(state.sAfter)) {
+//            state.lineChangable = false
+//        }
+//        return state.lineChangable
+//    }
 
     private inner class CurrentState internal constructor() {
-        internal var strPrev = ""
+//        internal var strPrev = ""
         internal var str = ""
         internal var sAfter = ""
 
@@ -581,8 +595,9 @@ class VerticalLayout {
         internal var isRuby = false
         internal var isKanjiBlock = false
         internal var isRubyBody = false
-        internal var lineChangable = true
+//        internal var lineChangable = true
         internal var isPageEnd = false
+        internal var isRubyBodyStarted = false
 
         internal var pos = PointF()//カーソル位置
         internal var rpos =  PointF()//ルビカーソル位置
