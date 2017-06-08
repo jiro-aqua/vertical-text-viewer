@@ -6,7 +6,6 @@ import android.os.Build
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager.OnPageChangeListener
 import android.util.AttributeSet
-import android.util.Log
 import android.view.*
 import android.widget.ProgressBar
 import android.widget.RelativeLayout

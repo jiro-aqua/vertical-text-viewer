@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private val vTextLayout by lazy { findViewById(R.id.vTextLayout) as VTextLayout }
 
     private val intentAction = "jp.gr.aqua.jota.vtextviewer.ACTION_OPEN"
-    private val mimeType = "text/plain"
+    //private val mimeType = "text/plain"
     private val EXTRA_START = "EXTRA_START"
     private val EXTRA_END = "EXTRA_END"
 
@@ -42,23 +42,24 @@ class MainActivity : AppCompatActivity() {
         }
         val rubyMode = pr.getRubyMode()
 
-        if (intent.action == Intent.ACTION_SEND ) {
-            val extras = intent.extras
-            extras?.let {
-                val text = it.getCharSequence(Intent.EXTRA_TEXT)
-                text?.let {
-                    vTextLayout.apply {
-                        setText(it.toString())
-                        setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
-                                Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
-                        setPadding(resources.getDimension(R.dimen.padding).toInt())
-                        setInitialPosition(position)
-                        setWrapPosition(charMax)
-                        setRubyMode(rubyMode)
-                    }
-                } ?: finish()
-            } ?: finish()
-        }else if(intent.action == intentAction ){
+//        if (intent.action == Intent.ACTION_SEND ) {
+//            val extras = intent.extras
+//            extras?.let {
+//                val text = it.getCharSequence(Intent.EXTRA_TEXT)
+//                text?.let {
+//                    vTextLayout.apply {
+//                        setText(it.toString())
+//                        setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
+//                                Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
+//                        setPadding(resources.getDimension(R.dimen.padding).toInt())
+//                        setInitialPosition(position)
+//                        setWrapPosition(charMax)
+//                        setRubyMode(rubyMode)
+//                    }
+//                } ?: finish()
+//            } ?: finish()
+//        }else
+        if(intent.action == intentAction ){
             val start = intent.getIntExtra(EXTRA_START,0);
             val end = intent.getIntExtra(EXTRA_END,0);
 
@@ -104,25 +105,25 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        if ( intent != null ) {
-            if (intent.action == Intent.ACTION_SEND) {
-                setIntent(intent)
-                val extras = intent.extras
-                extras?.let {
-                    val text = it.getCharSequence(Intent.EXTRA_TEXT)
-                    text?.let {
-                        vTextLayout.apply{
-                            setText(it.toString())
-                            //setInitialPosition(position)
-                            reLayoutChildren()
-                        }
-                    }
-                }
-            }
-        }
-    }
+//    override fun onNewIntent(intent: Intent?) {
+//        super.onNewIntent(intent)
+//        if ( intent != null ) {
+//            if (intent.action == Intent.ACTION_SEND) {
+//                setIntent(intent)
+//                val extras = intent.extras
+//                extras?.let {
+//                    val text = it.getCharSequence(Intent.EXTRA_TEXT)
+//                    text?.let {
+//                        vTextLayout.apply{
+//                            setText(it.toString())
+//                            //setInitialPosition(position)
+//                            reLayoutChildren()
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)

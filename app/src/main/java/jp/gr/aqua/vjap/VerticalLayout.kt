@@ -1,15 +1,9 @@
 package jp.gr.aqua.vjap
 
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PointF
-import android.graphics.Typeface
+import android.graphics.*
 import android.util.Log
-import rx.lang.kotlin.toSingletonObservable
-
 import java.lang.Character.UnicodeBlock
-import java.util.ArrayList
+import java.util.*
 import kotlin.properties.Delegates
 
 //methods
