@@ -160,7 +160,7 @@ class VerticalLayout {
                 if ( DEBUG ) {
                     var str = ""
                     line.first.line.forEach {
-                        str += it.first
+                        str += it
                     }
                     Log.d("===>", str)
                 }
@@ -192,12 +192,12 @@ class VerticalLayout {
     fun getIndexFromPage(page:Int):Int {
         val line = lines[pageIndex[page]]
         if ( line.line.size > 0 ) {
-            return line.line[0].second
+            return line.index
         }else{ // 空行の時は後ろの行を探す
             ( pageIndex[page] .. pageIndex.last() ).forEach{
                 val theLine = lines[it]
                 if ( theLine.line.size > 0 ){
-                    return theLine.line[0].second
+                    return theLine.index
                 }
             }
             return text.lastIndex
@@ -263,7 +263,7 @@ class VerticalLayout {
             val line = lines[index]
             val margin = calcMargin(line)
             line.line.forEach {
-                state.str = it.first
+                state.str = it
                 charDrawProcess(canvas, state , margin)
             }
 
@@ -510,7 +510,14 @@ class VerticalLayout {
         if ( idx >= text.length ){
             idx = -1
         }
-        return Line(result,broken) to idx
+
+        // 文字部分のみを抽出
+        val strarray = ArrayList<String>()
+        result.forEach {
+            strarray.add(it.first)
+        }
+
+        return Line( strarray, index, broken) to idx
     }
 
     private fun calcMargin(line : Line): Float {
@@ -534,7 +541,7 @@ class VerticalLayout {
         var charcount = 0
 
         line.line.forEach {
-            val str = it.first
+            val str = it
 
             //ルビが振られている箇所とルビ部分の判定
             if (str == ruby.bodyStart1 || str == ruby.bodyStart2 ) {            //ルビ本体開始
