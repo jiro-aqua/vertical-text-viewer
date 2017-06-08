@@ -102,9 +102,10 @@ class VerticalLayout {
     }
 
     //文字列描画関数
-    private fun drawString(canvas: Canvas?, s: String, pos: PointF, style: TextStyle) {
-        for (i in 0..s.length - 1) {
-            canvas?.let{ drawChar(canvas, s[i] + "", pos, style) }
+    private fun drawString(canvas: Canvas?, s: ArrayList<String>, pos: PointF, style: TextStyle) {
+        s.forEach {
+            str ->
+            canvas?.let{ drawChar(canvas, str, pos, style) }
             pos.y += style.fontSpace
         }
     }
@@ -134,7 +135,7 @@ class VerticalLayout {
         res.x = state.rubyStart.x + bodyStyle.fontSpace//一文字ずらして表示
         res.y = state.rubyStart.y - rubyStyle.fontSpace//縦書きの場合は基準がずれているため補正
         if (state.pos.y - state.rubyStart.y > 0) { //改行が入っていない場合
-            res.y -= (0.5 * (state.rubyText.length * rubyStyle.fontSpace - (state.pos.y - state.rubyStart.y))).toFloat()
+            res.y -= (0.5 * (state.rubyText.size * rubyStyle.fontSpace - (state.pos.y - state.rubyStart.y))).toFloat()
         }
         if (res.y < TOP_SPACE) res.y = TOP_SPACE.toFloat()
 
@@ -304,9 +305,10 @@ class VerticalLayout {
 
         //ルビが振られている箇所とルビ部分の判定
         if (state.isRubyEnable) {
-            if (state.isRubyBody && (state.bodyText.length > 20 || state.str == "\n")) {
-                drawString(canvas, state.buf + state.bodyText, state.pos, bodyStyle )
-                state.bodyText = ""
+            if (state.isRubyBody && (state.bodyText.size > 20 || state.str == "\n")) {
+                state.bodyText.add(0,state.buf )
+                drawString(canvas, state.bodyText, state.pos, bodyStyle )
+                state.bodyText.clear()
                 state.buf = ""
                 state.isRubyBody = false
             }
@@ -314,11 +316,12 @@ class VerticalLayout {
             if (state.str == ruby.bodyStart1 || state.str == ruby.bodyStart2 ) {            //ルビ本体開始
                 //ルビ開始中にルビ開始した場合は出力
                 if (state.bodyText.isNotEmpty()) {
-                    drawString(canvas, state.buf + state.bodyText, state.pos, bodyStyle )
-                    state.bodyText = ""
+                    state.bodyText.add(0,state.buf )
+                    drawString(canvas, state.bodyText, state.pos, bodyStyle )
+                    state.bodyText.clear()
                     state.buf = ""
                 }
-                state.bodyText = ""
+                state.bodyText.clear()
                 state.buf = state.str
                 state.isRubyBody = true
                 state.isRubyBodyStarted = true
@@ -328,7 +331,7 @@ class VerticalLayout {
                     (state.isRubyBody || state.isKanjiBlock)) { //ルビ開始状態であれば
                 state.isRuby = true
                 state.isRubyBody = false
-                state.rubyText = ""
+                state.rubyText.clear()
                 return
             }
             if (state.str == ruby.rubyEnd && state.isRuby) {    //ルビ終了
@@ -336,7 +339,7 @@ class VerticalLayout {
                 state.rpos = getRubyPos(state)
                 drawString(canvas, state.rubyText, state.rpos, rubyStyle )
                 state.isRuby = false
-                state.bodyText = ""
+                state.bodyText.clear()
                 state.buf = ""
                 return
             }
@@ -362,11 +365,11 @@ class VerticalLayout {
                 state.isRubyBodyStarted = false
             }
             if (state.isRuby) {
-                state.rubyText += state.str
+                state.rubyText.add(state.str)
                 return
             }
             if (state.isRubyBody) {
-                state.bodyText += state.str
+                state.bodyText.add(state.str)
                 return
             }
         }
@@ -461,6 +464,10 @@ class VerticalLayout {
             //文字を描画して次へ
             result.add(str to idx)
             idx += len
+        }
+
+        if ( idx >= text.length ){
+            broken = true
         }
 
         if ( !broken && result.isNotEmpty()) {
@@ -608,9 +615,9 @@ class VerticalLayout {
     private inner class CurrentState internal constructor() {
         internal var str = ""
 
-        internal var rubyText = ""//ルビ
-        internal var bodyText = ""//ルビ対象
-        internal var buf = ""//記号の一時保持用
+        internal var rubyText = ArrayList<String>() //ルビ
+        internal var bodyText = ArrayList<String>() //ルビ対象
+        internal var buf = "" //記号の一時保持用
 
         internal var isRubyEnable = true
         internal var isRuby = false
