@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.PointF
 import android.graphics.Typeface
 import android.util.Log
+import rx.lang.kotlin.toSingletonObservable
 
 import java.lang.Character.UnicodeBlock
 import java.util.ArrayList
@@ -75,12 +76,13 @@ class VerticalLayout {
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-        val isLatin = UnicodeBlock.of(s[0]) === UnicodeBlock.BASIC_LATIN
-        if (isLatin) {
+        if (isLatin(s)) {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
             } else {
-                halfOffset = 0.2f
+                if ( s.length != 2 ) {
+                    halfOffset = 0.2f
+                }
             }
         }
         //描画スキップのフラグ
@@ -447,9 +449,8 @@ class VerticalLayout {
             val setting = CharSetting.getSetting(str)
             val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-            val isLatin = UnicodeBlock.of(str[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
-            if (isLatin) {
-                if (setting != null && setting.angle != 0.0f) {
+            if (isLatin(str)) {
+                if (str.length != 2 && setting != null && setting.angle != 0.0f) {
                     pos -= fontSpacing / 2
                 }
             }
@@ -524,7 +525,9 @@ class VerticalLayout {
             strarray.add(it.first)
         }
 
-        return Line( strarray, index, broken) to idx
+        val merged = mergeTwoLatinCharacters(strarray)
+
+        return Line( merged, index, broken) to idx
     }
 
     private fun calcMargin(line : Line): Float {
@@ -591,6 +594,55 @@ class VerticalLayout {
         return diff / charcount
     }
 
+    private fun mergeTwoLatinCharacters(line : ArrayList<String>) : ArrayList<String> {
+
+        var last = ""
+        var last1 = 0
+        var last2 = 0
+        val result = ArrayList<String>()
+
+        line.forEachIndexed {
+            idx, str ->
+            result.add(str)
+            val kind = str.kind()
+            if ( idx > 0 ){
+                if ( kind != 0 && last1 != last2 && last1 == kind && kind != line.kindOfNextCharacter(idx) ){
+                    // 二文字のLatin連続を発見
+                    // 出力側の最後二文字を削除して結合する
+                    result.remove(result.last())
+                    result.remove(result.last())
+                    result.add( last+str )
+                }
+            }
+            last2 = last1
+            last1 = kind
+            last = str
+        }
+        return  result
+    }
+
+    private fun isLatin( str:String ) : Boolean {
+        return  str.isNotEmpty() && UnicodeBlock.of(str[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
+    }
+
+    private fun String.kind() : Int
+    {
+        if (this.isEmpty()) return 0
+        val ch = this[0]
+        if ( ch.isDigit() ) return 1
+        if ( 'A' <= ch && ch <= 'Z') return 2
+        if ( 'a' <= ch && ch <= 'z') return 2
+        return 0
+    }
+
+    private fun ArrayList<String>.kindOfNextCharacter(idx:Int) : Int
+    {
+        if ( idx + 1 < this.size ){
+            return this[idx+1].kind()
+        }else{
+            return 0
+        }
+    }
 
     val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
             "。.　 "
