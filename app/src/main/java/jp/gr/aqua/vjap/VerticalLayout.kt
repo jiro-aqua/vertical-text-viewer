@@ -102,14 +102,11 @@ class VerticalLayout {
     }
 
     //文字列描画関数
-    private fun drawString(canvas: Canvas?, s: String, pos: PointF, style: TextStyle): Boolean {
+    private fun drawString(canvas: Canvas?, s: String, pos: PointF, style: TextStyle) {
         for (i in 0..s.length - 1) {
             canvas?.let{ drawChar(canvas, s[i] + "", pos, style) }
-            if (!goNext(pos, style)) {
-                return false
-            }
+            pos.y += style.fontSpace
         }
-        return true
     }
 
     //改行処理。次の行が書ければtrue 端に到達したらfalse
@@ -117,32 +114,6 @@ class VerticalLayout {
         pos.x -= type.lineSpace * spaceRate
         pos.y = TOP_SPACE + type.fontSpace
         return pos.x > LEFT_SPACE
-    }
-
-    //次の位置へカーソル移動　次の行が書ければtrue 端に到達したらfalse
-    private fun goNext(pos: PointF, type: TextStyle): Boolean {
-//        var newLine = false
-//
-//        val bottomY = (height - BOTTOM_SPACE).toFloat()
-//        val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
-//
-//        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
-//
-//        if (pos.y + type.fontSpace > wrap ) {
-//            // もう文字が入らない場合
-//            newLine = true
-//        }
-//
-//        if (newLine && lineChangable) {
-//            // 改行処理
-//            return goNextLine(pos, type, 1f)
-//        } else {
-//        }
-        // 文字を送る
-        val fontSpace = type.fontSpace
-        //if(checkHalf( s )) fontSpace /= 2;
-        pos.y += fontSpace
-        return true
     }
 
     private fun initPos(pos: PointF) {
@@ -179,14 +150,6 @@ class VerticalLayout {
             }
 
             pageIndex.clear()
-
-            var current = 0
-//            Log.d("page", current.toString() + "")
-//            while (!textDraw(null, current)) {
-//                //描画を無効化して最後のページになるまで進める。
-//                current++
-//            }
-//            Log.d("page", current.toString() + "")
 
             var idx = 0
             lines.clear()
@@ -282,13 +245,12 @@ class VerticalLayout {
         }
 
     }
-    fun textDraw(canvas: Canvas?, page: Int): Boolean {
+    fun textDraw(canvas: Canvas?, page: Int){
         val state = CurrentState()
         initPos(state.pos)
         initPos(state.rpos)
         //テキスト位置を初期化
         //Log.d("debug", "width:"+width);
-        var endFlag = true
 
         var index = 0
         if (page > 0) {
@@ -310,7 +272,6 @@ class VerticalLayout {
             if ( !goNextLine(state.pos, bodyStyle, lineSize) ) break
             index ++
         }
-        return endFlag
     }
 
     private fun String.characterAt(i : Int) : String {
@@ -339,7 +300,7 @@ class VerticalLayout {
 
 
 
-    private fun charDrawProcess(canvas: Canvas?, state: CurrentState , margin : Float): Boolean {
+    private fun charDrawProcess(canvas: Canvas?, state: CurrentState , margin : Float) {
 
         //ルビが振られている箇所とルビ部分の判定
         if (state.isRubyEnable) {
@@ -361,14 +322,14 @@ class VerticalLayout {
                 state.buf = state.str
                 state.isRubyBody = true
                 state.isRubyBodyStarted = true
-                return true
+                return
             }
             if (state.str == ruby.rubyStart && //ルビ開始
                     (state.isRubyBody || state.isKanjiBlock)) { //ルビ開始状態であれば
                 state.isRuby = true
                 state.isRubyBody = false
                 state.rubyText = ""
-                return true
+                return
             }
             if (state.str == ruby.rubyEnd && state.isRuby) {    //ルビ終了
                 drawString(canvas, state.bodyText, state.pos, bodyStyle )
@@ -377,7 +338,7 @@ class VerticalLayout {
                 state.isRuby = false
                 state.bodyText = ""
                 state.buf = ""
-                return !state.isPageEnd
+                return
             }
 
             state.isKanjiBlock = if ( ruby.aozora ) {
@@ -402,11 +363,11 @@ class VerticalLayout {
             }
             if (state.isRuby) {
                 state.rubyText += state.str
-                return true
+                return
             }
             if (state.isRubyBody) {
                 state.bodyText += state.str
-                return true
+                return
             }
         }
         //その他通常描字
@@ -414,26 +375,11 @@ class VerticalLayout {
         //タイトルならスタイル変更
         val style = bodyStyle
 
-//        //改行処理
-//        if (state.str == "\n") {
-//            if (state.strPrev == "\n") {
-//                return this.goNextLine(state.pos, style, 0.5.toFloat())
-//            } else {
-//                return this.goNextLine(state.pos, style, 1f)
-//            }
-//
-//        }
         //文字を描画して次へ
         this.drawChar(canvas, state.str, state.pos, style )
 
         state.pos.y += margin
-
-        if (!this.goNext(state.pos, style)) {
-            state.isPageEnd = true
-            //ルビがある場合はルビを描画してから終了
-            return state.isRubyBody
-        }
-        return true
+        state.pos.y += style.fontSpace
     }
 
     private fun calcLine(text:String , index:Int): Pair< Line , Int > {
@@ -653,9 +599,7 @@ class VerticalLayout {
 //    }
 
     private inner class CurrentState internal constructor() {
-//        internal var strPrev = ""
         internal var str = ""
-        internal var sAfter = ""
 
         internal var rubyText = ""//ルビ
         internal var bodyText = ""//ルビ対象
@@ -665,8 +609,6 @@ class VerticalLayout {
         internal var isRuby = false
         internal var isKanjiBlock = false
         internal var isRubyBody = false
-//        internal var lineChangable = true
-        internal var isPageEnd = false
         internal var isRubyBodyStarted = false
 
         internal var pos = PointF()//カーソル位置
@@ -695,7 +637,6 @@ class VerticalLayout {
             this.paint.isAntiAlias = true
             this.paint.isSubpixelText = true
 
-            //this.fontSpace = this.paint.getFontSpacing();
             this.fontSpace = size.toFloat()
             this.lineSpace = this.fontSpace * 2
         }
