@@ -106,13 +106,6 @@ class VerticalLayout {
         }
     }
 
-    //改行処理。次の行が書ければtrue 端に到達したらfalse
-    private fun goNextLine(pos: PointF, type: TextStyle, spaceRate: Float): Boolean {
-        pos.x -= type.lineSpace * spaceRate
-        pos.y = TOP_SPACE + type.fontSpace
-        return pos.x > LEFT_SPACE
-    }
-
     private fun initPos(pos: PointF) {
         pos.x = width.toFloat() - bodyStyle.lineSpace - RIGHT_SPACE.toFloat()
         pos.y = TOP_SPACE + bodyStyle.fontSpace
@@ -266,7 +259,14 @@ class VerticalLayout {
 
             //改行処理
             val lineSize = if (line.line.size > 0) { 1.0F }else { 0.5F }
-            if ( !goNextLine(state.pos, bodyStyle, lineSize) ) break
+
+            state.pos.x -= bodyStyle.lineSpace * lineSize
+            state.pos.y = TOP_SPACE + bodyStyle.fontSpace
+
+            // ページ幅を超えたらページエンド
+            if ( state.pos.x <= LEFT_SPACE ) break
+
+            // 次の行へ
             index ++
         }
     }
@@ -393,7 +393,6 @@ class VerticalLayout {
 
         val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
-        //if(checkHalf( s )) fontSpace /= 2;
         var pos = 0f
 
         var idx = index
@@ -648,15 +647,6 @@ class VerticalLayout {
                     "・:;。.　 "
 
     val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
-
-//    private fun checkLineChangable(state: CurrentState): Boolean {
-//        if (!state.lineChangable) {//連続で禁則処理はしない
-//            state.lineChangable = true
-//        } else if (KINSOKU_GYOUTOU.contains(state.sAfter)) {
-//            state.lineChangable = false
-//        }
-//        return state.lineChangable
-//    }
 
     private inner class CurrentState internal constructor() {
         internal var str = ""
