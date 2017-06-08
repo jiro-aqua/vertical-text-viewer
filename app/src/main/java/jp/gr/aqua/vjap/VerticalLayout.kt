@@ -637,16 +637,16 @@ class VerticalLayout {
         }
     }
 
-    val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
+    private val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
             "。.　 "
 
-    val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
+    private val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
                     "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
                     "‐゠–〜"+
                     "？！?!‼⁇⁈⁉"+
                     "・:;。.　 "
 
-    val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
+    private val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
 
     private inner class CurrentState internal constructor() {
         internal var str = ""
