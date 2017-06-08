@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.View
+import android.widget.Toast
 
 class VTextView : View {
 
@@ -18,7 +19,13 @@ class VTextView : View {
 
     public override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        layout?.textDraw(canvas, currentIndex)
+        try {
+            // ここで落ちると親を巻き込むので対策しておく
+            layout?.textDraw(canvas, currentIndex)
+        }catch(ex:Exception){
+            Toast.makeText(context,"Error", Toast.LENGTH_LONG).show()
+            ex.printStackTrace()
+        }
     }
 
     fun setLayout(layout: VerticalLayout, page: Int) {
