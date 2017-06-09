@@ -468,7 +468,7 @@ class VerticalLayout {
             // 行末禁則のチェック
             val last = result.last()
             if ( !ruby.isRubyMarkup(last.first) && KINSOKU_GYOUMATU.contains(last.first)) {
-                result.remove(last)
+                result.removeAt(result.size-1)
                 idx = last.second
             }else {
 
@@ -492,7 +492,7 @@ class VerticalLayout {
                         if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
                             idx = result.last().second
                             next = result.last()
-                            result.remove(next)
+                            result.removeAt(result.size-1)
                         } else {
                             if (next.first == "\n") {
                                 idx += next.first.length
@@ -602,8 +602,8 @@ class VerticalLayout {
                 if ( kind != 0 && last1 != last2 && last1 == kind && kind != line.kindOfNextCharacter(idx) ){
                     // 二文字のLatin連続を発見
                     // 出力側の最後二文字を削除して結合する
-                    result.remove(result.last())
-                    result.remove(result.last())
+                    result.removeAt(result.size -1)
+                    result.removeAt(result.size -1)
                     result.add( last+str )
                 }
             }
