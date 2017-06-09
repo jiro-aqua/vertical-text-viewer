@@ -640,7 +640,7 @@ class VerticalLayout {
     {
         if (this.isEmpty()) return 0
         val ch = this[0]
-        if ( ch.isDigit() ) return 1
+        if ( '0' <= ch && ch <= '9') return 1
         if ( 'A' <= ch && ch <= 'Z') return 2
         if ( 'a' <= ch && ch <= 'z') return 2
         return 0
