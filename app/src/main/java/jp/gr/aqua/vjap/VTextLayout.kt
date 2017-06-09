@@ -281,4 +281,9 @@ class VTextLayout : RelativeLayout {
         subscription.unsubscribe()
     }
 
+    fun setOnDoubleClickListener( listener : (Int)->Unit ){
+        layout.setOnDoubleClickListener(listener)
+    }
+
+
 }

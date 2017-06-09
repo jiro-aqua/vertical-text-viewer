@@ -1,7 +1,6 @@
 package jp.gr.aqua.vtextviewer
 
 import android.app.Activity
-import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
@@ -60,8 +59,8 @@ class MainActivity : AppCompatActivity() {
 //            } ?: finish()
 //        }else
         if(intent.action == intentAction ){
-            val start = intent.getIntExtra(EXTRA_START,0);
-            val end = intent.getIntExtra(EXTRA_END,0);
+            val start = intent.getIntExtra(EXTRA_START,0)
+            val end = intent.getIntExtra(EXTRA_END,0)
 
             val uri = intent.data
             vTextLayout.apply {
@@ -103,6 +102,16 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
+        // 文字をダブルクリックされたら、その文字のカーソル位置を持って終了
+        vTextLayout.setOnDoubleClickListener {
+            position->
+            val intent = intent.apply{
+                putExtra(EXTRA_START,position)
+                putExtra(EXTRA_END,position)
+            }
+            setResult(Activity.RESULT_OK,intent)
+            finish()
+        }
     }
 
 //    override fun onNewIntent(intent: Intent?) {

@@ -34,6 +34,8 @@ class VerticalLayout {
     private var ruby by Delegates.notNull<Ruby>()
 
     private val lines = ArrayList<Line>()
+    private val charPositions = ArrayList<Pair<RectF,Int>>()
+
 
     fun setSize(width: Int, height: Int) {
         this.width = width
@@ -242,32 +244,48 @@ class VerticalLayout {
         //テキスト位置を初期化
         //Log.d("debug", "width:"+width);
 
-        var index = 0
+        var lineptr = 0
         if (page > 0) {
-            index = pageIndex[page - 1]
+            lineptr = pageIndex[page - 1]
         }
 
-        //描画
-        while (index < lines.size) {
+        charPositions.clear()
 
-            val line = lines[index]
+//        val paint = Paint().apply {
+//            style = Paint.Style.STROKE
+//        }
+
+        //描画
+        while (lineptr < lines.size) {
+
+            val line = lines[lineptr]
+            var charptr = line.index
             val margin = calcMargin(line)
+            val lineSize = if (line.line.size > 0) { 1.0F }else { 0.5F }
+            val nextposx = state.pos.x - bodyStyle.lineSpace * lineSize
+            val fontspace = bodyStyle.fontSpace
+            val linespace = bodyStyle.lineSpace
             line.line.forEach {
                 state.str = it
+                val oldy = state.pos.y
                 charDrawProcess(canvas, state , margin)
+                val rect = RectF(nextposx + linespace , oldy - fontspace, state.pos.x + linespace , state.pos.y - fontspace)
+                charPositions.add(rect to charptr)
+//                canvas?.drawRect(rect,paint)
+
+                charptr += it.length
             }
 
-            //改行処理
-            val lineSize = if (line.line.size > 0) { 1.0F }else { 0.5F }
 
-            state.pos.x -= bodyStyle.lineSpace * lineSize
+            //改行処理
+            state.pos.x = nextposx
             state.pos.y = TOP_SPACE + bodyStyle.fontSpace
 
             // ページ幅を超えたらページエンド
             if ( state.pos.x <= LEFT_SPACE ) break
 
             // 次の行へ
-            index ++
+            lineptr ++
         }
     }
 
@@ -700,4 +718,23 @@ class VerticalLayout {
     companion object {
         private val FONT_COLOR = Color.BLACK
     }
+
+    fun  getTouchedChar(x: Float, y: Float): Int {
+        charPositions.forEach {
+            if ( it.first.contains(x,y) ){
+                return it.second
+            }
+        }
+        return -1
+    }
+
+    fun setOnDoubleClickListener( listener : (Int)->Unit ){
+        onDoubleClickListener = listener
+    }
+
+    private var onDoubleClickListener : ((Int)->Unit)? = null
+    fun onDoubleClick( pos:Int){
+        onDoubleClickListener?.invoke(pos)
+    }
+
 }
