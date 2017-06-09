@@ -6,7 +6,6 @@ import android.content.Context
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import java.util.*
 
@@ -52,7 +51,7 @@ class ReversedViewPager : ViewPager {
 
             event.setLocation(virtualX, event.y)
             prevX = ex
-            Log.d("ex", virtualX.toString() + "")
+//            Log.d("ex", virtualX.toString() + "")
         }
         return super.onTouchEvent(event)
     }
