@@ -43,7 +43,7 @@ class VTextView : View {
             if ( action == MotionEvent.ACTION_DOWN ){
                 val theChar = layout?.getTouchedChar(event.x, event.y) ?: -1
                 val now = System.currentTimeMillis()
-                if ( now - lastTapTime < 1000L && lastTapChar == theChar ){
+                if ( theChar != -1 && now - lastTapTime < 1000L && lastTapChar == theChar ){
                     //Log.d("===>","ch=${theChar}")
                     layout?.onDoubleClick(theChar)
                 }
