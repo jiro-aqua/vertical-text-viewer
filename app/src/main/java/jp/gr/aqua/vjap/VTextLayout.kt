@@ -13,8 +13,9 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import jp.gr.aqua.vtextviewer.R
-import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
+import rx.subjects.PublishSubject
+import rx.subscriptions.CompositeSubscription
 import kotlin.properties.Delegates
 
 
@@ -40,6 +41,9 @@ class VTextLayout : RelativeLayout {
 
     private var wrapPosition = 0
     private var rubyMode = ""
+
+    private val layoutObservable  = PublishSubject.create<Pair<Int,Int>>()
+    private val subscription = CompositeSubscription()
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -130,6 +134,22 @@ class VTextLayout : RelativeLayout {
 
         //ページカウントバー
         progressBar.visibility = View.VISIBLE
+
+        // レイアウトイベント
+        subscription.add( layoutObservable
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    layout.setSize(it.first, it.second)
+                    layout.setWrapPosition(wrapPosition)
+                    layout.setRubyMode(rubyMode)
+                    val pageCount = layout.calcPages(contentText)
+                    viewPager.totalPage = pageCount - 1
+                    progressBar.visibility = View.GONE
+
+                    currentPage = layout.getPageByPosition(position)
+                    updatePageText()
+                    viewPager.setCurrentItem(currentPage, false)
+                })
 
     }
 
@@ -251,23 +271,14 @@ class VTextLayout : RelativeLayout {
                 } else {
                     vtoo.removeGlobalOnLayoutListener(this)
                 }
-
-                Observable.just( 1 )
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            layout.setSize(width, height)
-                            layout.setWrapPosition(wrapPosition)
-                            layout.setRubyMode(rubyMode)
-                            val pageCount = layout.calcPages(contentText)
-                            viewPager.totalPage = pageCount - 1
-                            progressBar.visibility = View.GONE
-
-                            currentPage = layout.getPageByPosition(position)
-                            updatePageText()
-                            viewPager.setCurrentItem(currentPage, false)
-                        }
+                layoutObservable.onNext(width to height)
             }
         })
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        subscription.unsubscribe()
     }
 
 }
