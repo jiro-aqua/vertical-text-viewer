@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     //private val mimeType = "text/plain"
     private val EXTRA_START = "EXTRA_START"
     private val EXTRA_END = "EXTRA_END"
+    private val EXTRA_POINTED = "EXTRA_POINTED"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,10 +105,12 @@ class MainActivity : AppCompatActivity() {
 
         // 文字をダブルクリックされたら、その文字のカーソル位置を持って終了
         vTextLayout.setOnDoubleClickListener {
-            position->
+            pointed->
             val intent = intent.apply{
+                val position = vTextLayout.getCurrentStartPosition()
                 putExtra(EXTRA_START,position)
                 putExtra(EXTRA_END,position)
+                putExtra(EXTRA_POINTED,pointed)
             }
             setResult(Activity.RESULT_OK,intent)
             finish()
