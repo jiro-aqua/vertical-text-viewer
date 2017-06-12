@@ -72,7 +72,7 @@ class VerticalLayout {
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-        if (isLatin(s)) {
+        if (s.isLatin()) {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
             } else {
@@ -460,7 +460,7 @@ class VerticalLayout {
             val setting = CharSetting.getSetting(str)
             val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-            if (isLatin(str)) {
+            if (str.isLatin()) {
                 if (str.length != 2 && setting != null && setting.angle != 0.0f) {
                     pos -= fontSpacing / 2
                 }
@@ -507,11 +507,18 @@ class VerticalLayout {
                     firstResult.addAll(result)
 
                     while (result.size > 0) {
+                        val last = result.last()
                         if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
-                            idx = result.last().second
-                            next = result.last()
+                            // ルビ記号でなく、行末禁則文字なら追い出す
+                            idx = last.second
+                            next = last
                             result.removeAt(result.size-1)
-                        } else {
+                        } else if ( next.first.isHalfAlNum() && last.first.isHalfAlNum() ) {
+                            // 英数字二連続なら追い出す
+                            idx = last.second
+                            next = last
+                            result.removeAt(result.size-1)
+                        }else{
                             if (next.first == "\n") {
                                 idx += next.first.length
                             }
@@ -632,8 +639,12 @@ class VerticalLayout {
         return  result
     }
 
-    private fun isLatin( str:String ) : Boolean {
-        return  str.isNotEmpty() && UnicodeBlock.of(str[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
+    private fun String.isLatin() : Boolean {
+        return  this.isNotEmpty() && UnicodeBlock.of(this[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
+    }
+
+    private fun String.isHalfAlNum() : Boolean {
+        return this.kind() != 0
     }
 
     private fun String.kind() : Int
