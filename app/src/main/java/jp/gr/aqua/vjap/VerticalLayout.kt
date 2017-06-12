@@ -265,15 +265,18 @@ class VerticalLayout {
             val nextposx = state.pos.x - bodyStyle.lineSpace * lineSize
             val fontspace = bodyStyle.fontSpace
             val linespace = bodyStyle.lineSpace
-            line.line.forEach {
-                state.str = it
+            val length = line.line.size
+            line.line.forEachIndexed {
+                index, str ->
+                state.str = str
                 val oldy = state.pos.y
-                charDrawProcess(canvas, state , margin)
+                val mar = if ( index == length -1 ) 0f else margin
+                charDrawProcess(canvas, state , mar)
                 val rect = RectF(nextposx + linespace , oldy - fontspace, state.pos.x + linespace , state.pos.y - fontspace)
                 charPositions.add(rect to charptr)
 //                canvas?.drawRect(rect,paint)
 
-                charptr += it.length
+                charptr += str.length
             }
 
 
@@ -406,8 +409,8 @@ class VerticalLayout {
         // 文字幅
         val fontSpace = bodyStyle.fontSpace
 
-        val bottomY = (height - BOTTOM_SPACE).toFloat()
-        val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
+        val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
+        val wrapY = TOP_SPACE + fontSpace * wrapPosition
 
         val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
@@ -557,7 +560,7 @@ class VerticalLayout {
         // 文字幅
         val fontSpace = bodyStyle.fontSpace
 
-        val bottomY = (height - BOTTOM_SPACE).toFloat()
+        val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
         val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
 
         val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
@@ -606,6 +609,10 @@ class VerticalLayout {
         }
 
         val diff = wrap - pos
+        // 句読点が行末に来る場合はぶら下げになるように調整
+        if ( charcount > 2 && KINSOKU_BURASAGE.contains(line.line.last()) ){
+            return (diff + fontSpace ) / ( charcount -1 )
+        }
         if ( diff < 0 ){
             return 0F
         }

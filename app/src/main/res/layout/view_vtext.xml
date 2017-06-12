@@ -10,7 +10,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginBottom="15dp"
         android:layout_above="@+id/pageNumText"/>
 
     <RelativeLayout
