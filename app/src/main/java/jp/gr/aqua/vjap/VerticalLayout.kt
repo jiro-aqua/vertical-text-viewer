@@ -633,7 +633,8 @@ class VerticalLayout {
         val result = ArrayList<String>()
 
         line.forEachIndexed {
-            idx, str ->
+            idx, s ->
+            var str = s
             result.add(str)
             val kind = str.kind()
             if ( idx > 0 ){
@@ -643,6 +644,14 @@ class VerticalLayout {
                     result.removeAt(result.size -1)
                     result.removeAt(result.size -1)
                     result.add( last+str )
+                }
+                mergeExclamationAndQuestion( last , str )?.let {
+                    // 二文字の！？の組み合わせを発見
+                    // 出力側の最後二文字を削除して結合する
+                    result.removeAt(result.size -1)
+                    result.removeAt(result.size -1)
+                    result.add( it )
+                    str = ""
                 }
             }
             last2 = last1
@@ -659,6 +668,29 @@ class VerticalLayout {
     private fun String.isHalfAlNum() : Boolean {
         return this.kind() != 0
     }
+
+    private fun String.isExclamation() : Boolean {
+        return this == "!" || this == "！"
+    }
+
+    private fun String.isQuestion() : Boolean {
+        return this == "?" || this == "？"
+    }
+
+    private fun mergeExclamationAndQuestion(prev:String , next:String ): String?
+    {
+        if ( prev.isExclamation() && next.isExclamation() ){
+            return "!!"
+        }else if ( prev.isExclamation() && next.isQuestion() ){
+            return "!?"
+        }else if ( prev.isQuestion() && next.isQuestion() ){
+            return "??"
+        }else if ( prev.isQuestion() && next.isExclamation() ){
+            return "?!"
+        }
+        return null
+    }
+
 
     private fun String.kind() : Int
     {
