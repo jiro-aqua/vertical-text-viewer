@@ -107,9 +107,9 @@ class MainActivity : AppCompatActivity() {
         vTextLayout.setOnDoubleClickListener {
             pointed->
             val intent = intent.apply{
-                val position = vTextLayout.getCurrentStartPosition()
-                putExtra(EXTRA_START,position)
-                putExtra(EXTRA_END,position)
+                val pos = vTextLayout.getCurrentStartPosition()
+                putExtra(EXTRA_START,pos)
+                putExtra(EXTRA_END,pos)
                 putExtra(EXTRA_POINTED,pointed)
             }
             setResult(Activity.RESULT_OK,intent)
