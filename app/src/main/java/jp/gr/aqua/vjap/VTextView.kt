@@ -5,12 +5,17 @@ import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
+import android.view.ViewConfiguration.getDoubleTapTimeout
 import android.widget.Toast
 
 class VTextView : View {
 
     private var currentIndex = 0
     private var layout: VerticalLayout? = null
+
+    private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
+    private val doubleTapTimeout by lazy { getDoubleTapTimeout() }
 
     constructor(context: Context) : this(context, null)
 
@@ -35,20 +40,25 @@ class VTextView : View {
     }
 
     var lastTapTime = 0L
-    var lastTapChar = -1
+    var lastTouchX = 0F
+    var lastTouchY = 0F
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if ( event!= null ){
             val action = event.action
             if ( action == MotionEvent.ACTION_DOWN ){
-                val theChar = layout?.getTouchedChar(event.x, event.y) ?: -1
                 val now = System.currentTimeMillis()
-                if ( theChar != -1 && now - lastTapTime < 1000L && lastTapChar == theChar ){
-                    //Log.d("===>","ch=${theChar}")
-                    layout?.onDoubleClick(theChar)
+                val xdiff = Math.abs(event.x - lastTouchX)
+                val ydiff = Math.abs(event.y - lastTouchY)
+                if ( xdiff < touchSlop && ydiff < touchSlop && ( now - lastTapTime ) < doubleTapTimeout ){
+                    val theChar = layout?.getTouchedChar(currentIndex , event.x, event.y) ?: -1
+                    if ( theChar != -1 ) {
+                        layout?.onDoubleClick(theChar)
+                    }
                 }
                 lastTapTime = now
-                lastTapChar = theChar
+                lastTouchX = event.x
+                lastTouchY = event.y
             }
         }
         return super.onTouchEvent(event)

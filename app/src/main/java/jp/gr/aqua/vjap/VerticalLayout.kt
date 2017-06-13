@@ -2,6 +2,7 @@ package jp.gr.aqua.vjap
 
 import android.graphics.*
 import android.util.Log
+import android.util.SparseArray
 import java.lang.Character.UnicodeBlock
 import java.util.*
 import kotlin.properties.Delegates
@@ -34,7 +35,7 @@ class VerticalLayout {
     private var ruby by Delegates.notNull<Ruby>()
 
     private val lines = ArrayList<Line>()
-    private val charPositions = ArrayList<Pair<RectF,Int>>()
+    private val charPositions = SparseArray<ArrayList<Pair<PointF,Int>>>()
 
 
     fun setSize(width: Int, height: Int) {
@@ -140,6 +141,8 @@ class VerticalLayout {
             if ( BOTTOM_SPACE < bodyStyle.fontSpace ){
                 BOTTOM_SPACE = bodyStyle.fontSpace.toInt()
             }
+
+            charPositions.clear()
 
             pageIndex.clear()
 
@@ -249,7 +252,7 @@ class VerticalLayout {
             lineptr = pageIndex[page - 1]
         }
 
-        charPositions.clear()
+        val positionArray = ArrayList<Pair<PointF,Int>>()
 
 //        val paint = Paint().apply {
 //            style = Paint.Style.STROKE
@@ -272,13 +275,16 @@ class VerticalLayout {
                 val oldy = state.pos.y
                 val mar = if ( index == length -1 ) 0f else margin
                 charDrawProcess(canvas, state , mar)
-                val rect = RectF(nextposx + linespace , oldy - fontspace, state.pos.x + linespace , state.pos.y - fontspace)
-                charPositions.add(rect to charptr)
+                val point = PointF( ( nextposx + linespace + state.pos.x + linespace ) / 2 ,
+                        ( oldy - fontspace + state.pos.y - fontspace ) /2)
+                positionArray.add( point to charptr)
 //                canvas?.drawRect(rect,paint)
 
                 charptr += str.length
             }
-
+            if ( charPositions.get(page) == null ) {
+                charPositions.append(page, positionArray)
+            }
 
             //改行処理
             state.pos.x = nextposx
@@ -510,16 +516,16 @@ class VerticalLayout {
                     firstResult.addAll(result)
 
                     while (result.size > 0) {
-                        val last = result.last()
+                        val lastchar = result.last()
                         if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
                             // ルビ記号でなく、行末禁則文字なら追い出す
-                            idx = last.second
-                            next = last
+                            idx = lastchar.second
+                            next = lastchar
                             result.removeAt(result.size-1)
-                        } else if ( next.first.isHalfAlNum() && last.first.isHalfAlNum() ) {
+                        } else if ( next.first.isHalfAlNum() && lastchar.first.isHalfAlNum() ) {
                             // 英数字二連続なら追い出す
-                            idx = last.second
-                            next = last
+                            idx = lastchar.second
+                            next = lastchar
                             result.removeAt(result.size-1)
                         }else{
                             if (next.first == "\n") {
@@ -737,13 +743,17 @@ class VerticalLayout {
         private val FONT_COLOR = Color.BLACK
     }
 
-    fun  getTouchedChar(x: Float, y: Float): Int {
-        charPositions.forEach {
-            if ( it.first.contains(x,y) ){
-                return it.second
+    fun  getTouchedChar( page:Int , x: Float, y: Float): Int {
+        val array = charPositions.get(page)
+
+        var nearest : Pair<Float,Int> = 1000000F to -1
+        array.forEach {
+            val distance = Math.sqrt( (( it.first.x - x ) * ( it.first.x - x ) +  ( it.first.y - y ) * ( it.first.y - y )).toDouble() ).toFloat()
+            if ( distance < nearest.first ){
+                nearest = distance to it.second
             }
         }
-        return -1
+        return nearest.second
     }
 
     fun setOnDoubleClickListener( listener : (Int)->Unit ){
