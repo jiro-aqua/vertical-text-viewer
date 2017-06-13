@@ -40,7 +40,6 @@ class MainActivity : AppCompatActivity() {
             // 横向きの場合
             pr.getCharMaxLand()
         }
-        val rubyMode = pr.getRubyMode()
 
 //        if (intent.action == Intent.ACTION_SEND ) {
 //            val extras = intent.extras
@@ -71,7 +70,6 @@ class MainActivity : AppCompatActivity() {
                         Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
                 setPadding(resources.getDimension(R.dimen.padding).toInt())
                 setWrapPosition(charMax)
-                setRubyMode(rubyMode)
             }
 
             Single.just(uri)

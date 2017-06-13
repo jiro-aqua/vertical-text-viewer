@@ -20,13 +20,6 @@
     <string name="char_max_summary">一行当たりの文字数を設定します</string>
     <string name="char_max_hint">0:画面端で折返し</string>
 
-    <string name="ruby_kind">ルビ記号</string>
-    <string name="ruby_kind_aozora">青空文庫</string>
-    <string name="ruby_kind_bccks">BCCKS</string>
-    <string name="ruby_kind_pixiv">Pixiv</string>
-    <string name="ruby_kind_denden">でんでんコンバータ</string>
-    <string name="ruby_kind_html">HTML5</string>
-
     <string name="category_settings">設定</string>
     <string name="category_information">情報</string>
 

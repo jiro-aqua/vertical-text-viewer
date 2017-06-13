@@ -23,20 +23,4 @@
         <item>24</item>
     </string-array>
 
-    <string-array name="ruby_kind">
-        <item>@string/ruby_kind_aozora</item>
-        <item>@string/ruby_kind_bccks</item>
-        <item>@string/ruby_kind_denden</item>
-        <item>@string/ruby_kind_pixiv</item>
-        <item>@string/ruby_kind_html</item>
-    </string-array>
-
-    <string-array name="ruby_kind_value">
-        <item>aozora</item>
-        <item>bccks</item>
-        <item>denden</item>
-        <item>pixiv</item>
-        <item>html</item>
-    </string-array>
-
 </resources>

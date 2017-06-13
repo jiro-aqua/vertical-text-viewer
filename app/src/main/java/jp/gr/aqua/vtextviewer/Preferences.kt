@@ -13,7 +13,6 @@ class Preferences(context: Context){
         val KEY_FONT_SIZE="font_size"
         val KEY_CHAR_MAX_PORT="char_max_port"
         val KEY_CHAR_MAX_LAND="char_max_land"
-        val KEY_RUBY_KIND="ruby_kind"
         val KEY_IPA="about_ipa"
     }
 
@@ -41,10 +40,5 @@ class Preferences(context: Context){
     }
 
     fun String.toIntSafety() : Int = if ( this.isEmpty() ) 0 else this.toInt()
-
-    fun getRubyMode() : String
-    {
-        return sp.getString(KEY_RUBY_KIND,"aozora")
-    }
 
 }

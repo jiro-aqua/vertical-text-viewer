@@ -32,14 +32,6 @@
             android:defaultValue="0"
             android:dialogLayout="@layout/preference_charmax"
             />
-
-        <ListPreference
-            android:key="ruby_kind"
-            android:title="@string/ruby_kind"
-            android:entries="@array/ruby_kind"
-            android:entryValues="@array/ruby_kind_value"
-            android:defaultValue="aozora"
-            />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/category_information">
         <Preference

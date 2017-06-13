@@ -62,7 +62,7 @@ class VerticalLayout {
         this.wrapPosition = wrapPosition
     }
 
-    fun setRubyMode(rubyMode : String) {
+    private fun setRubyMode(rubyMode : String) {
         ruby = Rubys(rubyMode).getRuby()
     }
 
@@ -137,6 +137,8 @@ class VerticalLayout {
     fun calcPages(text: String?): Int {
         if (text != null) {
             this.text = text
+
+            setRubyMode( Rubys.detectRubyMode(text) )
 
             if ( BOTTOM_SPACE < bodyStyle.fontSpace ){
                 BOTTOM_SPACE = bodyStyle.fontSpace.toInt()
