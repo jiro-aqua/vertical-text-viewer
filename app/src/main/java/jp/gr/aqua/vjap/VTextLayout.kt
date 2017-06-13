@@ -195,27 +195,13 @@ class VTextLayout : RelativeLayout {
             }
             MotionEvent.ACTION_UP -> {
             }
-        }//			if( viewPager.isScrollDisabled() ){//ページングが有効ならクリックでページ送り
-        //				int direction =  isClickDirectionLeft ? 1 : -1; //方向によって係数を変える
-        //				if( direction * touchStartX > direction * vTextView.width /2 ) {
-        //					if( currentPage > 1 ) {
-        //						viewPager.setCurrentItem( currentPage -1 , false);
-        //					}
-        //				}else{
-        //					if( currentPage < vTextView.getTotalPage() ||  vTextView.getTotalPage() < 0 ){
-        //						viewPager.setCurrentItem( currentPage +1 , false);
-        //					}
-        //				}
-        //			}
-        //			updatePageText();
-
+        }
         return super.onInterceptTouchEvent(ev)
     }
 
     //VTextViewへのラッパー群
     fun setText(text: String) {
         contentText = text
-        //reset();
     }
 
     //フォント指定

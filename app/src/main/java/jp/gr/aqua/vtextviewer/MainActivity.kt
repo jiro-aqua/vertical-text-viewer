@@ -41,23 +41,6 @@ class MainActivity : AppCompatActivity() {
             pr.getCharMaxLand()
         }
 
-//        if (intent.action == Intent.ACTION_SEND ) {
-//            val extras = intent.extras
-//            extras?.let {
-//                val text = it.getCharSequence(Intent.EXTRA_TEXT)
-//                text?.let {
-//                    vTextLayout.apply {
-//                        setText(it.toString())
-//                        setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
-//                                Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
-//                        setPadding(resources.getDimension(R.dimen.padding).toInt())
-//                        setInitialPosition(position)
-//                        setWrapPosition(charMax)
-//                        setRubyMode(rubyMode)
-//                    }
-//                } ?: finish()
-//            } ?: finish()
-//        }else
         if(intent.action == intentAction ){
             val start = intent.getIntExtra(EXTRA_START,0)
             val end = intent.getIntExtra(EXTRA_END,0)
@@ -114,26 +97,6 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
     }
-
-//    override fun onNewIntent(intent: Intent?) {
-//        super.onNewIntent(intent)
-//        if ( intent != null ) {
-//            if (intent.action == Intent.ACTION_SEND) {
-//                setIntent(intent)
-//                val extras = intent.extras
-//                extras?.let {
-//                    val text = it.getCharSequence(Intent.EXTRA_TEXT)
-//                    text?.let {
-//                        vTextLayout.apply{
-//                            setText(it.toString())
-//                            //setInitialPosition(position)
-//                            reLayoutChildren()
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
