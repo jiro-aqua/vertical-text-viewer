@@ -781,7 +781,7 @@ class VerticalLayout {
         val array = charPositions.get(page)
 
         var nearest : Pair<Float,Int> = 1000000F to -1
-        array.forEach {
+        array?.forEach {
             val distance = Math.sqrt( (( it.first.x - x ) * ( it.first.x - x ) +  ( it.first.y - y ) * ( it.first.y - y )).toDouble() ).toFloat()
             if ( distance < nearest.first ){
                 nearest = distance to it.second
