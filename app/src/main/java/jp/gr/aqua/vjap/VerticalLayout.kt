@@ -780,14 +780,22 @@ class VerticalLayout {
     fun  getTouchedChar( page:Int , x: Float, y: Float): Int {
         val array = charPositions.get(page)
 
-        var nearest : Pair<Float,Int> = 1000000F to -1
+        var nearest : Triple<Float,Float,Int> = Triple( 1000000F , 0F , -1 )
         array?.forEach {
             val distance = Math.sqrt( (( it.first.x - x ) * ( it.first.x - x ) +  ( it.first.y - y ) * ( it.first.y - y )).toDouble() ).toFloat()
             if ( distance < nearest.first ){
-                nearest = distance to it.second
+                nearest = Triple(distance , y - it.first.y , it.second )
             }
         }
-        return nearest.second
+        if ( nearest.third != -1 ){
+            if ( nearest.second > 0 ) {
+                val next = nearest.third
+                if ( next < text.length -1 ){
+                    return nearest.third + 1;
+                }
+            }
+        }
+        return nearest.third
     }
 
     fun setOnDoubleClickListener( listener : (Int)->Unit ){
