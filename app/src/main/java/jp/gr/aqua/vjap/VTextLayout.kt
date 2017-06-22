@@ -40,7 +40,7 @@ class VTextLayout : RelativeLayout {
     private var density: Float = 0.toFloat()
 
     private var currentPage = 1
-    private var contentText by Delegates.notNull<String>()
+    private var contentText : String = ""
     private var position = 0
 
     private var wrapPosition = 0
@@ -159,14 +159,14 @@ class VTextLayout : RelativeLayout {
                     }
                 }
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
+                .subscribe( {
                     progressBar.visibility = View.GONE
 
                     currentPage = layout.getPageByPosition(position)
                     updatePageText()
                     viewPager.setCurrentItem(currentPage, false)
                     viewPager.adapter.notifyDataSetChanged()
-                })
+                },{it.printStackTrace()},{} ))
 
     }
 

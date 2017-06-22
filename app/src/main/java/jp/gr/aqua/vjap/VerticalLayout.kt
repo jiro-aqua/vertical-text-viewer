@@ -25,7 +25,7 @@ class VerticalLayout {
     private var bodyStyle by Delegates.notNull<TextStyle>()
     private var rubyStyle by Delegates.notNull<TextStyle>() // ルビ描字用
 
-    private var text: String by Delegates.notNull<String>()
+    private var text: String = ""
     private val pageIndex = ArrayList<Int>()
 
     private var width  = 0
@@ -77,7 +77,7 @@ class VerticalLayout {
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-        if (s.isLatin()) {
+        if (isLatin(s[0])) {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
             } else {
@@ -139,7 +139,7 @@ class VerticalLayout {
     }
 
     fun calcPages(text: String?): Int {
-        if (text != null) {
+        if (width != 0 && height !=0 && text != null) {
             this.text = text
 
             setRubyMode( Rubys.detectRubyMode(text) )
@@ -304,26 +304,29 @@ class VerticalLayout {
         }
     }
 
-    private fun String.characterAt(i : Int) : String {
+    private fun String.characterAt(i : Int, isRuby : (Char)->Boolean) : String {
         val c1 = this[i]
-        if ( UnicodeBlock.of(c1) == UnicodeBlock.HIGH_SURROGATES ){
+//        if ( UnicodeBlock.of(c1) == UnicodeBlock.HIGH_SURROGATES ){
+        if ( '\uD800' <= c1 && c1 <= '\uDBFF' ){
             val c2 = this[i+1]
             val s = c1.toString() + c2.toString()
             return s
         }
-        if ( this.startsWith(ruby.bodyStart1, startIndex = i) ){
-            return ruby.bodyStart1
-        }
-        if ( ruby.bodyStart2 != null ) {
-            if (this.startsWith(ruby.bodyStart2!!, startIndex = i)) {
-                return ruby.bodyStart2!!
+        if ( isRuby.invoke(c1) ) { // ルビ候補ならルビチェック
+            if (this.startsWith(ruby.bodyStart1, startIndex = i)) {
+                return ruby.bodyStart1
             }
-        }
-        if ( this.startsWith(ruby.rubyStart, startIndex = i) ){
-            return ruby.rubyStart
-        }
-        if ( this.startsWith(ruby.rubyEnd, startIndex = i) ){
-            return ruby.rubyEnd
+            if (ruby.bodyStart2 != null) {
+                if (this.startsWith(ruby.bodyStart2!!, startIndex = i)) {
+                    return ruby.bodyStart2!!
+                }
+            }
+            if (this.startsWith(ruby.rubyStart, startIndex = i)) {
+                return ruby.rubyStart
+            }
+            if (this.startsWith(ruby.rubyEnd, startIndex = i)) {
+                return ruby.rubyEnd
+            }
         }
         return c1.toString()
     }
@@ -433,27 +436,39 @@ class VerticalLayout {
         var isRuby = false
         var broken = false
 
-        while( idx < text.length ){
-            val str = text.characterAt(idx)
-            val len = str.length
+        val rubyBodyStart1 = ruby.bodyStart1
+        val rubyBodyStart2 = ruby.bodyStart2
+        val rubyRubyStart = ruby.rubyStart
+        val rubyRubyEnd  = ruby.rubyEnd
+        val checkRuby = ruby.isRuby
 
-            //ルビが振られている箇所とルビ部分の判定
-            if (str == ruby.bodyStart1 || str == ruby.bodyStart2 ) {            //ルビ本体開始
-                result.add(str to idx)
-                idx += len
-                continue
-            }
-            if (str == ruby.rubyStart ) { //ルビ開始状態であれば
-                result.add(str to idx)
-                idx += len
-                isRuby = true
-                continue
-            }
-            if (str == ruby.rubyEnd ) {    //ルビ終了
-                result.add(str to idx)
-                idx += len
-                isRuby = false
-                continue
+        // スタイル変更
+        val style = bodyStyle
+        val fontSpacing = style.fontSpace//paint.getFontSpacing();
+
+        while( idx < text.length ){
+            val str = text.characterAt(idx,checkRuby)
+            val len = str.length
+            val c0 = str[0]
+            if ( checkRuby.invoke(c0) ) {
+                //ルビが振られている箇所とルビ部分の判定
+                if (str == rubyBodyStart1 || str == rubyBodyStart2) {            //ルビ本体開始
+                    result.add(str to idx)
+                    idx += len
+                    continue
+                }
+                if (str == rubyRubyStart) { //ルビ開始状態であれば
+                    result.add(str to idx)
+                    idx += len
+                    isRuby = true
+                    continue
+                }
+                if (str == rubyRubyEnd) {    //ルビ終了
+                    result.add(str to idx)
+                    idx += len
+                    isRuby = false
+                    continue
+                }
             }
             if (isRuby) {
                 result.add(str to idx)
@@ -462,20 +477,16 @@ class VerticalLayout {
             }
             //その他通常描字
 
-            //タイトルならスタイル変更
-            val style = bodyStyle
-
             //改行処理
-            if (str == "\n") {
+            if (c0 == '\n') {
                 idx += len
                 broken = true
                 break
             }
 
-            val setting = CharSetting.getSetting(str)
-            val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-            if (str.isLatin()) {
+            if (isLatin(c0)) {
+                val setting = CharSetting.getSetting(str)
                 if (str.length != 2 && setting != null && setting.angle != 0.0f) {
                     pos -= fontSpacing / 2
                 }
@@ -506,13 +517,13 @@ class VerticalLayout {
             }else {
 
                 // 次の行の行頭を作成
-                var next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
+                var next = if (idx < text.length) text.characterAt(idx,checkRuby) to idx else "" to -1
 
                 // ぶら下げ禁則文字をぶら下げる
                 if (!ruby.isRubyMarkup(next.first) && KINSOKU_BURASAGE.contains(next.first)) {
                     result.add(next)
                     idx += next.first.length
-                    next = if (idx < text.length) text.characterAt(idx) to idx else "" to -1
+                    next = if (idx < text.length) text.characterAt(idx,checkRuby) to idx else "" to -1
                 }
 
                 // 次の行をチェック
@@ -585,6 +596,7 @@ class VerticalLayout {
 
         line.line.forEach {
             val str = it
+            val c0 = str[0]
 
             //ルビが振られている箇所とルビ部分の判定
             if (str == ruby.bodyStart1 || str == ruby.bodyStart2 ) {            //ルビ本体開始
@@ -609,8 +621,7 @@ class VerticalLayout {
             val setting = CharSetting.getSetting(str)
             val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-            val isLatin = UnicodeBlock.of(str[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
-            if (isLatin) {
+            if (isLatin(str[0])) {
                 if (setting != null && setting.angle != 0.0f) {
                     pos -= fontSpacing / 2
                 }
@@ -667,8 +678,8 @@ class VerticalLayout {
         return  result
     }
 
-    private fun String.isLatin() : Boolean {
-        return  this.isNotEmpty() && UnicodeBlock.of(this[0]) === java.lang.Character.UnicodeBlock.BASIC_LATIN
+    private fun isLatin(c:Char) : Boolean {
+        return  c < '\u0080'
     }
 
     private fun String.isHalfAlNum() : Boolean {

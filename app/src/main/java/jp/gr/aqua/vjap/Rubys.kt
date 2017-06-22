@@ -5,6 +5,7 @@ data class Ruby( val bodyStart1 : String ,
                   val rubyStart : String ,
                   val rubyEnd : String ,
                  val pattern : String,
+                 val isRuby : (Char)->Boolean,
                  val aozora : Boolean = false
                  ) {
 
@@ -24,12 +25,13 @@ class Rubys( val mode : String ) {
     fun getRuby() = RUBYS[mode] ?: RUBYS["aozora"]!!
 
     companion object {
+
         private val RUBYS = mapOf(
-                "aozora" to Ruby("|","｜","《", "》", "｜.+《.+》" ,aozora = true),  //青空文庫ルビ
-                "bccks" to Ruby("{",null,"}(",")","\\{.+\\}\\(.+\\)"),      //BCCKS
-                "denden" to Ruby( "{",null,"|","}", "\\{.+\\|.+\\}"),     //でんでんマークダウン
-                "pixiv" to Ruby( "[[rb:",null," > ","]]", "\\[\\[rb\\:.+ > .+\\]\\]"),   //pixiv
-                "html" to Ruby( "<ruby>",null,"<rt>","</rt></ruby>", "<ruby>.+<rt>.+</rt></ruby>") //HTML5
+                "aozora" to Ruby("|","｜","《", "》", "｜.+《.+》" ,isRuby = {ch -> ch=='|'||ch=='《'||ch=='》'} , aozora = true),  //青空文庫ルビ
+                "bccks" to Ruby("{",null,"}(",")","\\{.+\\}\\(.+\\)",isRuby = {ch -> ch=='{'||ch=='}'||ch==')'}),      //BCCKS
+                "denden" to Ruby( "{",null,"|","}", "\\{.+\\|.+\\}",isRuby = {ch -> ch=='{'||ch=='}'||ch=='|'}),     //でんでんマークダウン
+                "pixiv" to Ruby( "[[rb:",null," > ","]]", "\\[\\[rb\\:.+ > .+\\]\\]",isRuby = {ch -> ch=='['||ch==' '||ch==']'}),   //pixiv
+                "html" to Ruby( "<ruby>",null,"<rt>","</rt></ruby>", "<ruby>.+<rt>.+</rt></ruby>",isRuby = {ch -> ch=='<'}) //HTML5
         )
 
         fun detectRubyMode( text:String ) : String {
