@@ -100,13 +100,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-        outState?.putInt(KEY_POSITION, vTextLayout.getCurrentPosition())
+        outState?.apply{
+            putInt(KEY_POSITION, vTextLayout.getCurrentPosition())
+        }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
-        savedInstanceState?.getInt(KEY_POSITION)?.let{
-            vTextLayout.setInitialPosition(it)
+        savedInstanceState?.apply{
+            vTextLayout.setInitialPosition(getInt(KEY_POSITION))
         }
     }
 
