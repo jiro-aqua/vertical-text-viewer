@@ -6,6 +6,7 @@ import android.os.Build
 import android.support.v4.view.PagerAdapter
 import android.support.v4.view.ViewPager.OnPageChangeListener
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
@@ -17,6 +18,9 @@ import rx.android.schedulers.AndroidSchedulers
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import kotlin.properties.Delegates
+import kotlin.system.measureTimeMillis
+import android.support.v4.view.PagerAdapter.POSITION_NONE
+import rx.schedulers.Schedulers
 
 
 class VTextLayout : RelativeLayout {
@@ -85,6 +89,10 @@ class VTextLayout : RelativeLayout {
                 return view === obj
             }
 
+            override fun getItemPosition(obj: Any): Int {
+                return POSITION_NONE
+            }
+
         }
 
         //ページャを作成
@@ -136,17 +144,28 @@ class VTextLayout : RelativeLayout {
 
         // レイアウトイベント
         subscription.add( layoutObservable
+                .subscribeOn(Schedulers.io())
+                .filter { contentText.isNotEmpty() }
+                .doOnNext {
+                    if ( layout.needReLayout(it.first, it.second , contentText) ) {
+                        layout.setSize(it.first, it.second)
+                        layout.setWrapPosition(wrapPosition)
+                        val measureTime = measureTimeMillis {
+                            val pageCount = layout.calcPages(contentText)
+                            viewPager.totalPage = pageCount - 1
+                        }
+                        Log.d("======>", "time=${measureTime}ms len=${contentText.length}")
+                        Log.d("======>", "speed=${(measureTime.toFloat() * 1000F) / contentText.length} us/char")
+                    }
+                }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    layout.setSize(it.first, it.second)
-                    layout.setWrapPosition(wrapPosition)
-                    val pageCount = layout.calcPages(contentText)
-                    viewPager.totalPage = pageCount - 1
                     progressBar.visibility = View.GONE
 
                     currentPage = layout.getPageByPosition(position)
                     updatePageText()
                     viewPager.setCurrentItem(currentPage, false)
+                    viewPager.adapter.notifyDataSetChanged()
                 })
 
     }
@@ -202,6 +221,10 @@ class VTextLayout : RelativeLayout {
     //VTextViewへのラッパー群
     fun setText(text: String) {
         contentText = text
+
+        val width = viewPager.width
+        val height = viewPager.height
+        layoutObservable.onNext(width to height)
     }
 
     //フォント指定

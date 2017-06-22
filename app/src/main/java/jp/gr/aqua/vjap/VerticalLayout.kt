@@ -37,6 +37,10 @@ class VerticalLayout {
     private val lines = ArrayList<Line>()
     private val charPositions = SparseArray<ArrayList<Pair<PointF,Int>>>()
 
+    fun needReLayout(width: Int, height: Int, contentText: String) : Boolean
+    {
+        return !(this.width == width && this.height == height && text == contentText)
+    }
 
     fun setSize(width: Int, height: Int) {
         this.width = width
