@@ -13,6 +13,7 @@ import android.widget.RelativeLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
+import jp.gr.aqua.vtextviewer.BuildConfig
 import jp.gr.aqua.vtextviewer.R
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -153,20 +154,20 @@ class VTextLayout : RelativeLayout {
                             val pageCount = layout.calcPages(contentText)
                             viewPager.totalPage = pageCount - 1
                         }
-                        Log.d("======>", "time=${measureTime}ms len=${contentText.length}")
-                        Log.d("======>", "speed=${(measureTime.toFloat() * 1000F) / contentText.length} us/char")
+                        if ( BuildConfig.DEBUG ){
+                            Log.d("======>", "time=${measureTime}ms len=${contentText.length}")
+                            Log.d("======>", "speed=${(measureTime.toFloat() * 1000F) / contentText.length} us/char")
+                        }
                     }
                 }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe( {
                     progressBar.visibility = View.GONE
-
                     currentPage = layout.getPageByPosition(position)
                     updatePageText()
                     viewPager.setCurrentItem(currentPage, false)
                     viewPager.adapter.notifyDataSetChanged()
                 },{it.printStackTrace()},{} ))
-
     }
 
     internal fun updatePageText() {

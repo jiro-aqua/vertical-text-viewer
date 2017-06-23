@@ -172,13 +172,12 @@ class VerticalLayout {
 
             val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
-            printMeasureNanoTime("calc line") {
-                var idx = 0
-                _lines.clear()
-                while( idx >= 0 ){
-                    val line = calcLine(text , idx , fontSpace , wrap , _ruby)
-                    _lines.add(line)
-                    idx = line.next
+            var idx = 0
+            _lines.clear()
+            while( idx >= 0 ){
+                val line = calcLine(text , idx , fontSpace , wrap , _ruby)
+                _lines.add(line)
+                idx = line.next
 //                    if ( DEBUG ) {
 //                        var str = ""
 //                        line.first.line.forEach {
@@ -186,32 +185,31 @@ class VerticalLayout {
 //                        }
 //                        Log.d("===>", str)
 //                    }
+            }
+
+            // PageIndexの計算
+            val state = CurrentState()
+            initPos(state.pos)
+            val _pageIndex = pageIndex
+            val origx = state.pos.x
+            var x = origx
+            val lineSpace1 = bodyStyle.lineSpace
+            val lineSpace2 = bodyStyle.lineSpace / 2
+            val _LEFT_SPACE = LEFT_SPACE
+            _lines.forEachIndexed {
+                lineidx, list ->
+                if ( x < _LEFT_SPACE ){
+                    _pageIndex.add(lineidx)
+                    x = origx
+                }
+                if ( list.line.size > 0 ){
+                    x -= lineSpace1
+                }else{
+                    x -= lineSpace2
                 }
             }
-            printMeasureNanoTime("calc page index"){
-                // PageIndexの計算
-                val state = CurrentState()
-                initPos(state.pos)
-                val _pageIndex = pageIndex
-                val origx = state.pos.x
-                var x = origx
-                val lineSpace1 = bodyStyle.lineSpace
-                val lineSpace2 = bodyStyle.lineSpace / 2
-                val _LEFT_SPACE = LEFT_SPACE
-                _lines.forEachIndexed {
-                    lineidx, list ->
-                    if ( x < _LEFT_SPACE ){
-                        _pageIndex.add(lineidx)
-                        x = origx
-                    }
-                    if ( list.line.size > 0 ){
-                        x -= lineSpace1
-                    }else{
-                        x -= lineSpace2
-                    }
-                }
-                _pageIndex.add(_lines.size-1)
-            }
+            _pageIndex.add(_lines.size-1)
+
             return pageIndex.size
         } else {
             return 0
@@ -791,9 +789,11 @@ class VerticalLayout {
         onDoubleClickListener?.invoke(pos)
     }
 
-    private fun printMeasureNanoTime( tag: String , block : ()->Unit ){
-        val measured = measureNanoTime( block )
-        Log.d("=====>", "$tag=${measured}ns" )
-    }
+//    private fun printMeasureNanoTime( tag: String , block : ()->Unit ){
+//        val measured = measureNanoTime( block )
+//        if ( DEBUG ) {
+//            Log.d("=====>", "$tag=${measured}ns")
+//        }
+//    }
 
 }
