@@ -91,7 +91,7 @@ class VerticalLayout {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
             } else {
-                if ( vchar.length != 2 ) {
+                if ( vchar.length != 2 || vchar.asString[1] == ' ') {
                     halfOffset = 0.2f
                 }
             }
@@ -659,6 +659,12 @@ class VerticalLayout {
             var str = vchar
             result.add(str)
             val kind = str.kind()
+            if ( kind != 0 && last1 != kind && kind != line.kindOfNextCharacter(idx) ){
+                // 一文字のLatin連続を発見
+                // 'a 'に置き換え
+                result.removeAt(result.size -1)
+                result.add( str+" " )
+            }
             if ( idx > 0 ){
                 if ( kind != 0 && last1 != last2 && last1 == kind && kind != line.kindOfNextCharacter(idx) ){
                     // 二文字のLatin連続を発見
