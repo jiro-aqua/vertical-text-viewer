@@ -156,8 +156,11 @@ internal class CharSetting {
 
         private val sMap = HashMap<Char, CharSetting>()
 
-        fun getSetting(character: Char): CharSetting? {
-            return sMap[character]
+        fun getSetting(character: VChar): CharSetting? {
+            if ( character.length == 1 ){
+                return sMap[character.firstChar]
+            }
+            return null;
         }
 
 

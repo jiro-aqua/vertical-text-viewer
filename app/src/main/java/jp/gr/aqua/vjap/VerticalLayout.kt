@@ -83,7 +83,7 @@ class VerticalLayout {
     private fun drawChar(canvas: Canvas?, vchar: VChar, pos: PointF, style: TextStyle) {
         if ( vchar.isEmpty() ) return
         val firstChar = vchar.firstChar
-        val setting = CharSetting.getSetting(firstChar)
+        val setting = CharSetting.getSetting(vchar)
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
@@ -100,13 +100,13 @@ class VerticalLayout {
         if (canvas != null) {
             if (setting == null) {
                 // 文字設定がない場合、そのまま描画
-                canvas.drawText(vchar.string, pos.x + fontSpacing * halfOffset, pos.y, style.paint)
+                canvas.drawText(vchar.asString, pos.x + fontSpacing * halfOffset, pos.y, style.paint)
             } else {
                 // 文字設定が見つかったので、設定に従い描画
                 canvas.save()
                 canvas.rotate(setting.angle, pos.x, pos.y)
                 canvas.scale(setting.scaleX, setting.scaleY, pos.x, pos.y)
-                canvas.drawText(vchar.string,
+                canvas.drawText(vchar.asString,
                         pos.x + fontSpacing * setting.x, pos.y + fontSpacing * setting.y,
                         style.paint)
                 canvas.restore()
@@ -499,7 +499,7 @@ class VerticalLayout {
 
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
             if (vchar.isLatin()) {
-                val setting = CharSetting.getSetting(vchar.char)
+                val setting = CharSetting.getSetting(vchar)
                 if (setting != null && setting.angle != 0.0f) {
                     pos -= fontSpace / 2
                 }
@@ -623,7 +623,7 @@ class VerticalLayout {
             //タイトルならスタイル変更
             val style = bodyStyle
 
-            val setting = CharSetting.getSetting(str.firstChar)
+            val setting = CharSetting.getSetting(str)
             val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
             if (str.isLatin()) {

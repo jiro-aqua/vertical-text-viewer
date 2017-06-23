@@ -5,7 +5,7 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
     val length : Int
         get() = (str?.length?:1)
 
-    val string : String
+    val asString: String
         get() = str?:char.toString()
 
     val firstChar : Char
@@ -71,7 +71,7 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
     }
 
     operator fun plus(next : VChar) : VChar{
-        return VChar(this.string + next.string)
+        return VChar(this.asString + next.asString)
     }
 
     private val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
@@ -85,5 +85,8 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
 
     private val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
 
+    override fun toString(): String {
+        return this.asString
+    }
 }
 
