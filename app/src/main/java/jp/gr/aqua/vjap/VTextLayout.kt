@@ -15,12 +15,11 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import jp.gr.aqua.vtextviewer.R
 import rx.android.schedulers.AndroidSchedulers
+import rx.schedulers.Schedulers
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import kotlin.properties.Delegates
 import kotlin.system.measureTimeMillis
-import android.support.v4.view.PagerAdapter.POSITION_NONE
-import rx.schedulers.Schedulers
 
 
 class VTextLayout : RelativeLayout {
@@ -282,6 +281,7 @@ class VTextLayout : RelativeLayout {
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         subscription.unsubscribe()
+        layout.clear()
     }
 
     fun setOnDoubleClickListener( listener : (Int)->Unit ){

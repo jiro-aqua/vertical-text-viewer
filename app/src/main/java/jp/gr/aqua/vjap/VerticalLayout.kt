@@ -38,6 +38,14 @@ class VerticalLayout {
     private val lines = ArrayList<Line>()
     private val charPositions = SparseArray<ArrayList<CharPoint>>()
 
+    fun clear() {
+        charPositions.clear()
+        lines.clear()
+        pageIndex.clear()
+        text = ""
+        mFace = null
+    }
+
     fun needReLayout(width: Int, height: Int, contentText: String) : Boolean
     {
         return !(this.width == width && this.height == height && text == contentText)

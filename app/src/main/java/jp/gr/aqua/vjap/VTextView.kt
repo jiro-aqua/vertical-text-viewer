@@ -64,4 +64,8 @@ class VTextView : View {
         return super.onTouchEvent(event)
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        layout = null
+    }
 }
