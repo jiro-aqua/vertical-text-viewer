@@ -115,6 +115,6 @@ class ReversedViewPager : ViewPager {
 
     companion object {
 
-        internal val MAX_PAGE = 1024
+        internal val MAX_PAGE = 2048
     }
 }
