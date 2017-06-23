@@ -147,8 +147,9 @@ class VTextLayout : RelativeLayout {
                 .subscribeOn(Schedulers.io())
                 .filter { contentText.isNotEmpty() }
                 .doOnNext {
-                    if ( layout.needReLayout(it.first, it.second , contentText) ) {
-                        layout.setSize(it.first, it.second)
+                    val (width,height) = it
+                    if ( layout.needReLayout(width, height, contentText) ) {
+                        layout.setSize(width, height)
                         layout.setWrapPosition(wrapPosition)
                         val measureTime = measureTimeMillis {
                             val pageCount = layout.calcPages(contentText)
