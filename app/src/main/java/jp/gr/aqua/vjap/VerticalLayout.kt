@@ -6,12 +6,13 @@ import android.util.SparseArray
 import java.lang.Character.UnicodeBlock
 import java.util.*
 import kotlin.properties.Delegates
+import kotlin.system.measureNanoTime
 
 //methods
 
 class VerticalLayout {
 
-    private val DEBUG = false
+//    private val DEBUG = false
 
     private var TOP_SPACE = 18
     private var BOTTOM_SPACE = 18
@@ -35,7 +36,7 @@ class VerticalLayout {
     private var ruby by Delegates.notNull<Ruby>()
 
     private val lines = ArrayList<Line>()
-    private val charPositions = SparseArray<ArrayList<Pair<PointF,Int>>>()
+    private val charPositions = SparseArray<ArrayList<CharPoint>>()
 
     fun needReLayout(width: Int, height: Int, contentText: String) : Boolean
     {
@@ -71,17 +72,18 @@ class VerticalLayout {
     }
 
     //文字描画関数
-    private fun drawChar(canvas: Canvas?, s: String, pos: PointF, style: TextStyle) {
-        if ( s.isEmpty() ) return
-        val setting = CharSetting.getSetting(s)
+    private fun drawChar(canvas: Canvas?, vchar: VChar, pos: PointF, style: TextStyle) {
+        if ( vchar.isEmpty() ) return
+        val firstChar = vchar.firstChar
+        val setting = CharSetting.getSetting(firstChar)
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-        if (isLatin(s[0])) {
+        if (vchar.isLatin()) {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
             } else {
-                if ( s.length != 2 ) {
+                if ( vchar.length != 2 ) {
                     halfOffset = 0.2f
                 }
             }
@@ -90,13 +92,13 @@ class VerticalLayout {
         if (canvas != null) {
             if (setting == null) {
                 // 文字設定がない場合、そのまま描画
-                canvas.drawText(s, pos.x + fontSpacing * halfOffset, pos.y, style.paint)
+                canvas.drawText(vchar.string, pos.x + fontSpacing * halfOffset, pos.y, style.paint)
             } else {
                 // 文字設定が見つかったので、設定に従い描画
                 canvas.save()
                 canvas.rotate(setting.angle, pos.x, pos.y)
                 canvas.scale(setting.scaleX, setting.scaleY, pos.x, pos.y)
-                canvas.drawText(s,
+                canvas.drawText(vchar.string,
                         pos.x + fontSpacing * setting.x, pos.y + fontSpacing * setting.y,
                         style.paint)
                 canvas.restore()
@@ -105,7 +107,7 @@ class VerticalLayout {
     }
 
     //文字列描画関数
-    private fun drawString(canvas: Canvas?, s: ArrayList<String>, pos: PointF, style: TextStyle) {
+    private fun drawString(canvas: Canvas?, s: ArrayList<VChar>, pos: PointF, style: TextStyle) {
         s.forEach {
             str ->
             canvas?.let{ drawChar(canvas, str, pos, style) }
@@ -152,38 +154,56 @@ class VerticalLayout {
 
             pageIndex.clear()
 
-            var idx = 0
-            lines.clear()
-            while( idx >= 0 ){
-                val line = calcLine(text , idx)
-                lines.add(line.first)
-                idx = line.second
-                if ( DEBUG ) {
-                    var str = ""
-                    line.first.line.forEach {
-                        str += it
-                    }
-                    Log.d("===>", str)
-                }
-            }
-            // PageIndexの計算
-            val state = CurrentState()
-            initPos(state.pos)
-            initPos(state.rpos)
-            lines.forEachIndexed {
-                lineidx, list ->
-                if ( state.pos.x < LEFT_SPACE ){
-                    pageIndex.add(lineidx)
-                    initPos(state.pos)
-                }
-                if ( list.line.size > 0 ){
-                    state.pos.x -= bodyStyle.lineSpace
-                }else{
-                    state.pos.x -= bodyStyle.lineSpace / 2
-                }
-            }
-            pageIndex.add(lines.size-1)
+            val _lines = lines
+            val _ruby = ruby
 
+            // 文字幅
+            val fontSpace = bodyStyle.fontSpace
+            val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
+            val wrapY = TOP_SPACE + fontSpace * wrapPosition
+
+            val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+
+            printMeasureNanoTime("calc line") {
+                var idx = 0
+                _lines.clear()
+                while( idx >= 0 ){
+                    val line = calcLine(text , idx , fontSpace , wrap , _ruby)
+                    _lines.add(line)
+                    idx = line.next
+//                    if ( DEBUG ) {
+//                        var str = ""
+//                        line.first.line.forEach {
+//                            str += it
+//                        }
+//                        Log.d("===>", str)
+//                    }
+                }
+            }
+            printMeasureNanoTime("calc page index"){
+                // PageIndexの計算
+                val state = CurrentState()
+                initPos(state.pos)
+                val _pageIndex = pageIndex
+                val origx = state.pos.x
+                var x = origx
+                val lineSpace1 = bodyStyle.lineSpace
+                val lineSpace2 = bodyStyle.lineSpace / 2
+                val _LEFT_SPACE = LEFT_SPACE
+                _lines.forEachIndexed {
+                    lineidx, list ->
+                    if ( x < _LEFT_SPACE ){
+                        _pageIndex.add(lineidx)
+                        x = origx
+                    }
+                    if ( list.line.size > 0 ){
+                        x -= lineSpace1
+                    }else{
+                        x -= lineSpace2
+                    }
+                }
+                _pageIndex.add(_lines.size-1)
+            }
             return pageIndex.size
         } else {
             return 0
@@ -258,7 +278,7 @@ class VerticalLayout {
             lineptr = pageIndex[page - 1]
         }
 
-        val positionArray = ArrayList<Pair<PointF,Int>>()
+        val positionArray = ArrayList<CharPoint>()
 
 //        val paint = Paint().apply {
 //            style = Paint.Style.STROKE
@@ -281,9 +301,9 @@ class VerticalLayout {
                 val oldy = state.pos.y
                 val mar = if ( index == length -1 ) 0f else margin
                 charDrawProcess(canvas, state , mar)
-                val point = PointF( ( nextposx + linespace + state.pos.x + linespace ) / 2 ,
-                        ( oldy - fontspace + state.pos.y - fontspace ) /2)
-                positionArray.add( point to charptr)
+                val pointx = ( nextposx + linespace + state.pos.x + linespace ) / 2
+                val pointy = ( oldy - fontspace + state.pos.y - fontspace ) /2
+                positionArray.add( CharPoint(pointx, pointy, charptr))
 //                canvas?.drawRect(rect,paint)
 
                 charptr += str.length
@@ -304,31 +324,31 @@ class VerticalLayout {
         }
     }
 
-    private fun String.characterAt(i : Int, isRuby : (Char)->Boolean) : String {
-        val c1 = this[i]
+    private fun String.characterAt(i : Int, isRuby : (Char)->Boolean) : VChar {
+        val ch = this[i]
 //        if ( UnicodeBlock.of(c1) == UnicodeBlock.HIGH_SURROGATES ){
-        if ( '\uD800' <= c1 && c1 <= '\uDBFF' ){
+        if ( '\uD800' <= ch && ch <= '\uDBFF' ){
             val c2 = this[i+1]
-            val s = c1.toString() + c2.toString()
-            return s
+            val s = ch.toString() + c2.toString()
+            return VChar(str = s, idx = i)
         }
-        if ( isRuby.invoke(c1) ) { // ルビ候補ならルビチェック
+        if ( isRuby.invoke(ch) ) { // ルビ候補ならルビチェック
             if (this.startsWith(ruby.bodyStart1, startIndex = i)) {
-                return ruby.bodyStart1
+                return VChar(str=ruby.bodyStart1, idx = i)
             }
             if (ruby.bodyStart2 != null) {
                 if (this.startsWith(ruby.bodyStart2!!, startIndex = i)) {
-                    return ruby.bodyStart2!!
+                    return VChar(str = ruby.bodyStart2!!, idx = i)
                 }
             }
             if (this.startsWith(ruby.rubyStart, startIndex = i)) {
-                return ruby.rubyStart
+                return VChar(ruby.rubyStart, idx = i)
             }
             if (this.startsWith(ruby.rubyEnd, startIndex = i)) {
-                return ruby.rubyEnd
+                return VChar(ruby.rubyEnd, idx = i)
             }
         }
-        return c1.toString()
+        return VChar(char=ch, idx = i)
     }
 
 
@@ -337,21 +357,21 @@ class VerticalLayout {
 
         //ルビが振られている箇所とルビ部分の判定
         if (state.isRubyEnable) {
-            if (state.isRubyBody && (state.bodyText.size > 20 || state.str == "\n")) {
-                state.bodyText.add(0,state.buf )
+            if (state.isRubyBody && (state.bodyText.size > 20 || state.str.isLineBreak())) {
+                state.bodyText.add(0,state.buf)
                 drawString(canvas, state.bodyText, state.pos, bodyStyle )
                 state.bodyText.clear()
-                state.buf = ""
+                state.buf = VChar()
                 state.isRubyBody = false
             }
 
-            if (state.str == ruby.bodyStart1 || state.str == ruby.bodyStart2 ) {            //ルビ本体開始
+            if (state.str.equals(ruby.bodyStart1) || state.str.equals(ruby.bodyStart2)) {            //ルビ本体開始
                 //ルビ開始中にルビ開始した場合は出力
                 if (state.bodyText.isNotEmpty()) {
                     state.bodyText.add(0,state.buf )
                     drawString(canvas, state.bodyText, state.pos, bodyStyle )
                     state.bodyText.clear()
-                    state.buf = ""
+                    state.buf = VChar()
                 }
                 state.bodyText.clear()
                 state.buf = state.str
@@ -359,27 +379,27 @@ class VerticalLayout {
                 state.isRubyBodyStarted = true
                 return
             }
-            if (state.str == ruby.rubyStart && //ルビ開始
+            if (state.str.equals(ruby.rubyStart) && //ルビ開始
                     (state.isRubyBody || state.isKanjiBlock)) { //ルビ開始状態であれば
                 state.isRuby = true
                 state.isRubyBody = false
                 state.rubyText.clear()
                 return
             }
-            if (state.str == ruby.rubyEnd && state.isRuby) {    //ルビ終了
+            if (state.str.equals(ruby.rubyEnd) && state.isRuby) {    //ルビ終了
                 drawString(canvas, state.bodyText, state.pos, bodyStyle )
                 state.rpos = getRubyPos(state)
                 drawString(canvas, state.rubyText, state.rpos, rubyStyle )
                 state.isRuby = false
                 state.bodyText.clear()
-                state.buf = ""
+                state.buf = VChar()
                 return
             }
 
             state.isKanjiBlock = if ( ruby.aozora ) {
 
                 //漢字判定はルビ開始判定の後に行う必要あり
-                val isKanji = state.str.isNotEmpty() && ( UnicodeBlock.of(state.str[0]) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS || state.str=="々" || state.str=="〆" )
+                val isKanji = state.str.isNotEmpty() && ( UnicodeBlock.of(state.str.firstChar) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS || state.str.equals("々") || state.str.equals("〆"))
 
                 //Log.d("kanji",state.str +":" + isKanji+state.isKanjiBlock);
                 if (isKanji && !state.isKanjiBlock) {
@@ -417,17 +437,9 @@ class VerticalLayout {
         state.pos.y += style.fontSpace
     }
 
-    private fun calcLine(text:String , index:Int): Pair< Line , Int > {
+    private fun calcLine(text:String , index:Int , fontSpace : Float , wrap : Float , ruby : Ruby): Line  {
 
-        val result = ArrayList<Pair<String,Int>>()
-
-        // 文字幅
-        val fontSpace = bodyStyle.fontSpace
-
-        val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
-        val wrapY = TOP_SPACE + fontSpace * wrapPosition
-
-        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+        val result = ArrayList<VChar>()
 
         var pos = 0f
 
@@ -442,53 +454,48 @@ class VerticalLayout {
         val rubyRubyEnd  = ruby.rubyEnd
         val checkRuby = ruby.isRuby
 
-        // スタイル変更
-        val style = bodyStyle
-        val fontSpacing = style.fontSpace//paint.getFontSpacing();
-
         while( idx < text.length ){
-            val str = text.characterAt(idx,checkRuby)
-            val len = str.length
-            val c0 = str[0]
-            if ( checkRuby.invoke(c0) ) {
+            val vchar = text.characterAt(idx,checkRuby)
+            val len = vchar.length
+            if ( vchar.str != null && checkRuby.invoke(vchar.str[0]) ) {
                 //ルビが振られている箇所とルビ部分の判定
-                if (str == rubyBodyStart1 || str == rubyBodyStart2) {            //ルビ本体開始
-                    result.add(str to idx)
+                if (vchar.str == rubyBodyStart1 || vchar.str == rubyBodyStart2) {            //ルビ本体開始
+                    result.add(vchar)
                     idx += len
                     continue
                 }
-                if (str == rubyRubyStart) { //ルビ開始状態であれば
-                    result.add(str to idx)
+                if (vchar.str == rubyRubyStart) { //ルビ開始状態であれば
+                    result.add(vchar)
                     idx += len
                     isRuby = true
                     continue
                 }
-                if (str == rubyRubyEnd) {    //ルビ終了
-                    result.add(str to idx)
+                if (vchar.str == rubyRubyEnd) {    //ルビ終了
+                    result.add(vchar)
                     idx += len
                     isRuby = false
                     continue
                 }
             }
             if (isRuby) {
-                result.add(str to idx)
+                result.add(vchar)
                 idx += len
                 continue
             }
             //その他通常描字
 
             //改行処理
-            if (c0 == '\n') {
+            if (vchar.isLineBreak()) {
                 idx += len
                 broken = true
                 break
             }
 
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-            if (isLatin(c0)) {
-                val setting = CharSetting.getSetting(str)
-                if (str.length != 2 && setting != null && setting.angle != 0.0f) {
-                    pos -= fontSpacing / 2
+            if (vchar.isLatin()) {
+                val setting = CharSetting.getSetting(vchar.char)
+                if (setting != null && setting.angle != 0.0f) {
+                    pos -= fontSpace / 2
                 }
             }
 
@@ -500,7 +507,7 @@ class VerticalLayout {
             }
 
             //文字を描画して次へ
-            result.add(str to idx)
+            result.add(vchar)
             idx += len
         }
 
@@ -510,43 +517,42 @@ class VerticalLayout {
 
         if ( !broken && result.isNotEmpty()) {
             // 行末禁則のチェック
-            val last = result.last()
-            if ( !ruby.isRubyMarkup(last.first) && KINSOKU_GYOUMATU.contains(last.first)) {
+            val vchar = result.last()
+            if ( !vchar.isRubyMarkup(ruby) && vchar.isGyoumatuKinsoku() ) {
                 result.removeAt(result.size-1)
-                idx = last.second
-            }else {
-
+                idx = vchar.idx
+            }else{
                 // 次の行の行頭を作成
-                var next = if (idx < text.length) text.characterAt(idx,checkRuby) to idx else "" to -1
+                var next = if (idx < text.length) text.characterAt(idx,checkRuby) else VChar()
 
                 // ぶら下げ禁則文字をぶら下げる
-                if (!ruby.isRubyMarkup(next.first) && KINSOKU_BURASAGE.contains(next.first)) {
+                if ( !next.isRubyMarkup(ruby) && next.isBurasageKinsoku()) {
                     result.add(next)
-                    idx += next.first.length
-                    next = if (idx < text.length) text.characterAt(idx,checkRuby) to idx else "" to -1
+                    idx += next.length
+                    next = if (idx < text.length) text.characterAt(idx,checkRuby) else VChar()
                 }
 
                 // 次の行をチェック
                 if (pos > wrap) {
                     val firstIdx = idx
-                    val firstResult = ArrayList<Pair<String, Int>>()
+                    val firstResult = ArrayList<VChar>()
                     firstResult.addAll(result)
 
                     while (result.size > 0) {
                         val lastchar = result.last()
-                        if (!ruby.isRubyMarkup(next.first) && KINSOKU_GYOUTOU.contains(next.first)) {
+                        if ( !next.isRubyMarkup(ruby) && next.isGyoutouKinsoku()) {
                             // ルビ記号でなく、行末禁則文字なら追い出す
-                            idx = lastchar.second
+                            idx = lastchar.idx
                             next = lastchar
                             result.removeAt(result.size-1)
-                        } else if ( next.first.isHalfAlNum() && lastchar.first.isHalfAlNum() ) {
+                        } else if ( next.isHalfAlNum() && lastchar.isHalfAlNum() ) {
                             // 英数字二連続なら追い出す
-                            idx = lastchar.second
+                            idx = lastchar.idx
                             next = lastchar
                             result.removeAt(result.size-1)
                         }else{
-                            if (next.first == "\n") {
-                                idx += next.first.length
+                            if (next.isLineBreak()) {
+                                idx += next.length
                             }
                             break
                         }
@@ -563,15 +569,9 @@ class VerticalLayout {
             idx = -1
         }
 
-        // 文字部分のみを抽出
-        val strarray = ArrayList<String>()
-        result.forEach {
-            strarray.add(it.first)
-        }
+        val merged = mergeTwoLatinCharacters(result)
 
-        val merged = mergeTwoLatinCharacters(strarray)
-
-        return Line( merged, index, broken) to idx
+        return Line( merged, index , broken , next = idx )
     }
 
     private fun calcMargin(line : Line): Float {
@@ -596,17 +596,16 @@ class VerticalLayout {
 
         line.line.forEach {
             val str = it
-            val c0 = str[0]
 
             //ルビが振られている箇所とルビ部分の判定
-            if (str == ruby.bodyStart1 || str == ruby.bodyStart2 ) {            //ルビ本体開始
+            if (str.equals(ruby.bodyStart1) || str.equals(ruby.bodyStart2)) {            //ルビ本体開始
                 return@forEach
             }
-            if (str == ruby.rubyStart ) { //ルビ開始状態であれば
+            if (str.equals(ruby.rubyStart)) { //ルビ開始状態であれば
                 isRuby = true
                 return@forEach
             }
-            if (str == ruby.rubyEnd ) {    //ルビ終了
+            if (str.equals(ruby.rubyEnd)) {    //ルビ終了
                 isRuby = false
                 return@forEach
             }
@@ -618,10 +617,10 @@ class VerticalLayout {
             //タイトルならスタイル変更
             val style = bodyStyle
 
-            val setting = CharSetting.getSetting(str)
+            val setting = CharSetting.getSetting(str.firstChar)
             val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
-            if (isLatin(str[0])) {
+            if (str.isLatin()) {
                 if (setting != null && setting.angle != 0.0f) {
                     pos -= fontSpacing / 2
                 }
@@ -633,7 +632,7 @@ class VerticalLayout {
 
         val diff = wrap - pos
         // 句読点が行末に来る場合はぶら下げになるように調整
-        if ( charcount > 2 && KINSOKU_BURASAGE.contains(line.line.last()) ){
+        if ( charcount > 2 && line.line.last().isBurasageKinsoku() ){
             return (diff + fontSpace ) / ( charcount -1 )
         }
         if ( diff < 0 ){
@@ -642,16 +641,16 @@ class VerticalLayout {
         return diff / charcount
     }
 
-    private fun mergeTwoLatinCharacters(line : ArrayList<String>) : ArrayList<String> {
+    private fun mergeTwoLatinCharacters(line : ArrayList<VChar>) : ArrayList<VChar> {
 
-        var last = ""
+        var last = VChar()
         var last1 = 0
         var last2 = 0
-        val result = ArrayList<String>()
+        val result = ArrayList<VChar>()
 
         line.forEachIndexed {
-            idx, s ->
-            var str = s
+            idx, vchar ->
+            var str = vchar
             result.add(str)
             val kind = str.kind()
             if ( idx > 0 ){
@@ -668,7 +667,7 @@ class VerticalLayout {
                     result.removeAt(result.size -1)
                     result.removeAt(result.size -1)
                     result.add( it )
-                    str = ""
+                    str = VChar()
                 }
             }
             last2 = last1
@@ -678,48 +677,21 @@ class VerticalLayout {
         return  result
     }
 
-    private fun isLatin(c:Char) : Boolean {
-        return  c < '\u0080'
-    }
-
-    private fun String.isHalfAlNum() : Boolean {
-        return this.kind() != 0
-    }
-
-    private fun String.isExclamation() : Boolean {
-        return this == "!" || this == "！"
-    }
-
-    private fun String.isQuestion() : Boolean {
-        return this == "?" || this == "？"
-    }
-
-    private fun mergeExclamationAndQuestion(prev:String , next:String ): String?
+    private fun mergeExclamationAndQuestion(prev:VChar , next:VChar ): VChar?
     {
         if ( prev.isExclamation() && next.isExclamation() ){
-            return "!!"
+            return VChar("!!")
         }else if ( prev.isExclamation() && next.isQuestion() ){
-            return "!?"
+            return VChar("!?")
         }else if ( prev.isQuestion() && next.isQuestion() ){
-            return "??"
+            return VChar("??")
         }else if ( prev.isQuestion() && next.isExclamation() ){
-            return "?!"
+            return VChar("?!")
         }
         return null
     }
 
-
-    private fun String.kind() : Int
-    {
-        if (this.isEmpty()) return 0
-        val ch = this[0]
-        if ( '0' <= ch && ch <= '9') return 1
-        if ( 'A' <= ch && ch <= 'Z') return 2
-        if ( 'a' <= ch && ch <= 'z') return 2
-        return 0
-    }
-
-    private fun ArrayList<String>.kindOfNextCharacter(idx:Int) : Int
+    private fun ArrayList<VChar>.kindOfNextCharacter(idx:Int) : Int
     {
         if ( idx + 1 < this.size ){
             return this[idx+1].kind()
@@ -728,23 +700,12 @@ class VerticalLayout {
         }
     }
 
-    private val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
-            "。.　 "
-
-    private val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
-                    "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
-                    "‐゠–〜～"+
-                    "？！?!‼⁇⁈⁉"+
-                    "・:;。.　 "
-
-    private val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
-
     private inner class CurrentState internal constructor() {
-        internal var str = ""
+        internal var str = VChar()
 
-        internal var rubyText = ArrayList<String>() //ルビ
-        internal var bodyText = ArrayList<String>() //ルビ対象
-        internal var buf = "" //記号の一時保持用
+        internal var rubyText = ArrayList<VChar>() //ルビ
+        internal var bodyText = ArrayList<VChar>() //ルビ対象
+        internal var buf = VChar() //記号の一時保持用
 
         internal var isRubyEnable = true
         internal var isRuby = false
@@ -795,22 +756,22 @@ class VerticalLayout {
     fun  getTouchedChar( page:Int , x: Float, y: Float): Int {
         val array = charPositions.get(page)
 
-        var nearest : Triple<Float,Float,Int> = Triple( 1000000F , 0F , -1 )
+        var nearest : CharPoint = CharPoint( 1000000F , 0F , -1 )
         array?.forEach {
-            val distance = Math.sqrt( (( it.first.x - x ) * ( it.first.x - x ) +  ( it.first.y - y ) * ( it.first.y - y )).toDouble() ).toFloat()
-            if ( distance < nearest.first ){
-                nearest = Triple(distance , y - it.first.y , it.second )
+            val distance = Math.sqrt( (( it.x - x ) * ( it.x - x ) +  ( it.y - y ) * ( it.y - y )).toDouble() ).toFloat()
+            if ( distance < nearest.x ){
+                nearest = CharPoint(distance , y - it.y , it.ptr)
             }
         }
-        if ( nearest.third != -1 ){
-            if ( nearest.second > 0 ) {
-                val next = nearest.third
+        if ( nearest.ptr != -1 ){
+            if ( nearest.y > 0 ) {
+                val next = nearest.ptr
                 if ( next < text.length -1 ){
-                    return nearest.third + 1;
+                    return nearest.ptr + 1
                 }
             }
         }
-        return nearest.third
+        return nearest.ptr
     }
 
     fun setOnDoubleClickListener( listener : (Int)->Unit ){
@@ -820,6 +781,11 @@ class VerticalLayout {
     private var onDoubleClickListener : ((Int)->Unit)? = null
     fun onDoubleClick( pos:Int){
         onDoubleClickListener?.invoke(pos)
+    }
+
+    private fun printMeasureNanoTime( tag: String , block : ()->Unit ){
+        val measured = measureNanoTime( block )
+        Log.d("=====>", "$tag=${measured}ns" )
     }
 
 }
