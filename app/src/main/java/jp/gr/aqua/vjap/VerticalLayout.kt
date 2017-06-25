@@ -291,16 +291,18 @@ class VerticalLayout {
 //        }
 
         //描画
-        while (lineptr < lines.size) {
+        while (lineptr < lines.size && lineptr < pageIndex[page] ) {
 
             val line = lines[lineptr]
             var charptr = line.index
             val margin = calcMargin(line)
             val lineSize = if (line.line.size > 0) { 1.0F }else { 0.5F }
-            val nextposx = state.pos.x - bodyStyle.lineSpace * lineSize
+            val nextposx1 = state.pos.x - bodyStyle.lineSpace * lineSize
+            val nextposx2 = state.pos.x - bodyStyle.lineSpace * lineSize / 2
             val fontspace = bodyStyle.fontSpace
             val linespace = bodyStyle.lineSpace
             val length = line.line.size
+            val nextposx = if ( length == 0 ){ nextposx2 } else { nextposx1 }
             line.line.forEachIndexed {
                 index, str ->
                 state.str = str
@@ -322,8 +324,8 @@ class VerticalLayout {
             state.pos.x = nextposx
             state.pos.y = TOP_SPACE + bodyStyle.fontSpace
 
-            // ページ幅を超えたらページエンド
-            if ( state.pos.x <= LEFT_SPACE ) break
+//            // ページ幅を超えたらページエンド
+//            if ( state.pos.x < LEFT_SPACE ) break
 
             // 次の行へ
             lineptr ++
