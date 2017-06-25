@@ -25,3 +25,5 @@
     long producerNode;
     long consumerNode;
 }
+
+-keepattributes *Annotation*,SourceFile,LineNumberTable
