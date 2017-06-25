@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">縦書きPreviewer for Jota+</string>
+    <string name="app_name">縦書きプレビュー for Jota+</string>
 
     <string name="ok">OK</string>
     <string name="about_ipa_font">IPAフォントについて</string>
@@ -22,5 +22,8 @@
 
     <string name="category_settings">設定</string>
     <string name="category_information">情報</string>
+
+    <string name="permission_name">縦書きプレビュー</string>
+    <string name="permission_description">縦書きプレビューを起動するための権限です</string>
 
 </resources>

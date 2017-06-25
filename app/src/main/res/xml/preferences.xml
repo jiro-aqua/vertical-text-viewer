@@ -41,12 +41,6 @@
         </Preference>
 
         <Preference
-            android:key="app_usage"
-            android:title="@string/app_usage"
-            >
-        </Preference>
-
-        <Preference
             android:key="app_about"
             android:title="@string/app_about"
             >

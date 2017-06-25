@@ -25,10 +25,6 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         ps.findPreference(Preferences.KEY_ABOUT)
                 .setSummary("version: ${BuildConfig.VERSION_NAME} (c)Aquamarine Networks.")
 
-        // IPAフォントについて
-        ps.findPreference(Preferences.KEY_USAGE)
-                .setOnPreferenceClickListener { showMessage(R.string.app_usage , "usage.txt" ) }
-
     }
 
     override fun onAttach(context: Context?) {
