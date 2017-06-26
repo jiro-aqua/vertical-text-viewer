@@ -193,7 +193,7 @@ class VerticalLayout {
             var x = origx
             val lineSpace1 = bodyStyle.lineSpace
             val lineSpace2 = bodyStyle.lineSpace / 2
-            val _LEFT_SPACE = LEFT_SPACE
+            val _LEFT_SPACE = LEFT_SPACE + lineSpace2
             _lines.forEachIndexed {
                 lineidx, list ->
                 if ( x < _LEFT_SPACE ){
@@ -289,7 +289,8 @@ class VerticalLayout {
 //        }
 
         //描画
-        while (lineptr < lines.size && lineptr < pageIndex[page] ) {
+        val max = if ( page < pageIndex.size ) pageIndex[page] else lines.size
+        while (lineptr < max ) {
 
             val line = lines[lineptr]
             var charptr = line.index
