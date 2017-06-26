@@ -193,7 +193,7 @@ class VerticalLayout {
             var x = origx
             val lineSpace1 = bodyStyle.lineSpace
             val lineSpace2 = bodyStyle.lineSpace / 2
-            val _LEFT_SPACE = LEFT_SPACE + lineSpace2
+            val _LEFT_SPACE = LEFT_SPACE
             _lines.forEachIndexed {
                 lineidx, list ->
                 if ( x < _LEFT_SPACE ){

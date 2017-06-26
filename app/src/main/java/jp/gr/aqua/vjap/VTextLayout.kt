@@ -48,6 +48,8 @@ class VTextLayout : RelativeLayout {
     private val layoutObservable  = PublishSubject.create<Pair<Int,Int>>()
     private val subscription = CompositeSubscription()
 
+    private var gestureDetector: GestureDetector? = null
+
     constructor(context: Context) : super(context) {
         init(context)
     }
@@ -69,9 +71,10 @@ class VTextLayout : RelativeLayout {
                 //左スクロールにするためにページとポジションを反転
                 //ReversedViewPagerはsetCurrentItemを上書きしているが、ここで来るpositionは生のモノ
                 val page = ReversedViewPager.MAX_PAGE - position - 1
-
-                val view = VTextView(context)
-                view.setLayout(layout, page)
+                val view = VTextView(context).apply{
+                    setLayout(layout, page)
+                    tag = position
+                }
                 container.addView(view)
                 return view
             }
@@ -169,6 +172,8 @@ class VTextLayout : RelativeLayout {
                     viewPager.setCurrentItem(currentPage, false)
                     viewPager.adapter.notifyDataSetChanged()
                 },{it.printStackTrace()},{} ))
+
+        gestureDetector = GestureDetector(context, GestureListener())
     }
 
     internal fun updatePageText() {
@@ -216,6 +221,25 @@ class VTextLayout : RelativeLayout {
             MotionEvent.ACTION_UP -> {
             }
         }
+
+//        val action = ev.action
+//        if ( action == MotionEvent.ACTION_DOWN ){
+//            val now = System.currentTimeMillis()
+//            val xdiff = Math.abs(ev.x - lastTouchX)
+//            val ydiff = Math.abs(ev.y - lastTouchY)
+//            if ( xdiff < touchSlop && ydiff < touchSlop && ( now - lastTapTime ) < doubleTapTimeout ){
+//                Log.d("=====>","Double Tapped! ${viewPager.getCurrentItem()}" )
+//                val vtextview = findViewWithTag(viewPager.getCurrentItem())
+//                if ( vtextview is VTextView ){
+//                    vtextview.onDoubleTapped(ev.x , ev.y)
+//                }
+//            }
+//            lastTapTime = now
+//            lastTouchX = ev.x
+//            lastTouchY = ev.y
+//        }
+        gestureDetector?.onTouchEvent(ev)
+
         return super.onInterceptTouchEvent(ev)
     }
 
@@ -290,5 +314,27 @@ class VTextLayout : RelativeLayout {
         layout.setOnDoubleClickListener(listener)
     }
 
+//    private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
+//    private val doubleTapTimeout by lazy { ViewConfiguration.getDoubleTapTimeout() }
+//    private var lastTapTime = 0L
+//    private var lastTouchX = 0F
+//    private var lastTouchY = 0F
+
+    private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+
+        override fun onDown(e: MotionEvent): Boolean {
+            return true
+        }
+
+        // event when double tap occurs
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            Log.d("=====>","Double Tapped! ${viewPager.currentItem}" )
+            val vtextview = findViewWithTag(viewPager.currentItem)
+            if ( vtextview is VTextView ){
+                vtextview.onDoubleTapped(e.x , e.y)
+            }
+            return true
+        }
+    }
 
 }
