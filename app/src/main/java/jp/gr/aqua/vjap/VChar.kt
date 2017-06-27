@@ -78,8 +78,7 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
         return VChar(this.asString + next)
     }
 
-    private val KINSOKU_BURASAGE = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
-            "。.　 "
+    private val KINSOKU_BURASAGE = ",、。.　 "
 
     private val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
             "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
