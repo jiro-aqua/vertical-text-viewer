@@ -14,6 +14,7 @@ class Preferences(context: Context){
         val KEY_CHAR_MAX_PORT="char_max_port"
         val KEY_CHAR_MAX_LAND="char_max_land"
         val KEY_IPA="about_ipa"
+        val KEY_WRITING_PAPER="writing_paper"
     }
 
     val sp : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -37,6 +38,11 @@ class Preferences(context: Context){
     fun getCharMaxLand() : Int
     {
         return sp.getString(KEY_CHAR_MAX_LAND,"0").toIntSafety()
+    }
+
+    fun isWritingPaperMode() : Boolean
+    {
+        return sp.getBoolean(KEY_WRITING_PAPER,false)
     }
 
     fun String.toIntSafety() : Int = if ( this.isEmpty() ) 0 else this.toInt()

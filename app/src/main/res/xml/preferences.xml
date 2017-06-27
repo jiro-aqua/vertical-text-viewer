@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/category_settings">
+        <SwitchPreferenceCompat
+            android:key="writing_paper"
+            android:title="@string/writing_paper"
+            android:summary="@string/writing_paper_summary"
+            android:defaultValue="false"
+            />
+
         <ListPreference
             android:key="font_kind"
             android:title="@string/font_kind"

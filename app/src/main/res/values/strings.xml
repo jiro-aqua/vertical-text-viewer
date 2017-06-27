@@ -20,6 +20,9 @@
     <string name="char_max_summary">一行当たりの文字数を設定します</string>
     <string name="char_max_hint">0:画面端で折返し</string>
 
+    <string name="writing_paper">原稿用紙モード</string>
+    <string name="writing_paper_summary">原稿用紙風に一行20文字で表示します。</string>
+
     <string name="category_settings">設定</string>
     <string name="category_information">情報</string>
 

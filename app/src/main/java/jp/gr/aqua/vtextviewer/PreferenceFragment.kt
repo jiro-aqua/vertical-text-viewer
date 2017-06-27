@@ -17,6 +17,11 @@ class PreferenceFragment : PreferenceFragmentCompat() {
 
         val ps = pm.preferenceScreen
 
+        // 原稿用紙モード
+        val fontkind = ps.findPreference(Preferences.KEY_FONT_SIZE)
+        ps.findPreference(Preferences.KEY_WRITING_PAPER)
+                .setOnPreferenceChangeListener { preference, newValue -> if ( newValue is Boolean ) fontkind.setEnabled( !newValue ) ; true}
+
         // IPAフォントについて
         ps.findPreference(Preferences.KEY_IPA)
             .setOnPreferenceClickListener { showMessage(R.string.about_ipa_font , "IPA_Font_License_Agreement_v1.0.txt" ) }
