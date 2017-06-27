@@ -67,6 +67,10 @@ class ReversedViewPager : ViewPager {
 		return currentPage;
 	}*/
 
+    override fun getCurrentItem(): Int {
+        return MAX_PAGE - super.getCurrentItem()
+    }
+
     override fun setCurrentItem(i: Int) {
         super.setCurrentItem(MAX_PAGE - i)
     }

@@ -183,7 +183,7 @@ class VTextLayout : RelativeLayout {
     }
 
     fun updatePageNum(showSeekBar: Boolean) {
-        pagingBar.max = layout.pageCount - 1
+        pagingBar.max = layout.pageCount
         pagingBar.progress = currentPage
         updatePageText()
         progressBar.visibility = View.GONE
@@ -335,6 +335,34 @@ class VTextLayout : RelativeLayout {
             }
             return true
         }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+        if ( event == null ) return false
+
+        val keyCode = event.keyCode
+        if ( keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+                keyCode == KeyEvent.KEYCODE_DPAD_RIGHT ){
+            if ( event.action == KeyEvent.ACTION_DOWN ){
+                val current = viewPager.currentItem
+                if ( current > 0 ){
+                    viewPager.setCurrentItem(current-1,true)
+                }
+            }
+            return true;
+        }
+        if ( keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ||
+                keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
+                keyCode == KeyEvent.KEYCODE_SPACE ){
+            if ( event.action == KeyEvent.ACTION_DOWN ) {
+                val current = viewPager.currentItem
+                if (current <= viewPager.totalPage ) {
+                    viewPager.setCurrentItem(current + 1, true)
+                }
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event)
     }
 
 }
