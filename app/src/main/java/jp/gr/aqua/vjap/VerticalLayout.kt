@@ -216,12 +216,12 @@ class VerticalLayout {
 
     fun getIndexFromPage(page:Int):Int {
         val lastLine = pageIndex[page]
-        val line = if ( lastLine < lines.size ) lines[lastLine] else lines[lines.size -1 ]
+        val line = if ( lastLine < lines.size ) lines[lastLine] else lines[lines.size -1]
         if ( line.line.size > 0 ) {
             return line.index
         }else{ // 空行の時は後ろの行を探す
             ( pageIndex[page] .. pageIndex.last() ).forEach{
-                val theLine = lines[it]
+                val theLine = if ( it < lines.size ) lines[it] else lines[lines.size-1]
                 if ( theLine.line.size > 0 ){
                     return theLine.index
                 }
