@@ -20,16 +20,16 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         // 原稿用紙モード
         val writingPaperModeEnabler : (value:Boolean)->Unit = {
             value->
-            ps.findPreference(Preferences.KEY_FONT_SIZE).isEnabled = value
-            ps.findPreference(Preferences.KEY_CHAR_MAX_PORT).isEnabled = value
-            ps.findPreference(Preferences.KEY_CHAR_MAX_LAND).isEnabled = value
+            ps.findPreference(Preferences.KEY_FONT_SIZE).isEnabled = !value
+            ps.findPreference(Preferences.KEY_CHAR_MAX_PORT).isEnabled = !value
+            ps.findPreference(Preferences.KEY_CHAR_MAX_LAND).isEnabled = !value
         }
 
         writingPaperModeEnabler( Preferences(context).isWritingPaperMode() )
 
         ps.findPreference(Preferences.KEY_WRITING_PAPER)
                 .setOnPreferenceChangeListener {
-                    preference, newValue -> if ( newValue is Boolean ) writingPaperModeEnabler( !newValue )
+                    preference, newValue -> if ( newValue is Boolean ) writingPaperModeEnabler( newValue )
                     true
                 }
 
