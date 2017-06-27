@@ -39,6 +39,8 @@ class VerticalLayout {
     private var writingPaperChars = 1
     private var latinCount = 0
 
+    var needRelayoutFlag = false
+
     private val linePaint by lazy {
         Paint().apply{
             style = Paint.Style.STROKE
@@ -49,6 +51,7 @@ class VerticalLayout {
 
     var writingPaperMode : Boolean = false
         set(value){ field = value }
+        get() = field
 
     var scaledDensity : Float = 1.0f
         set(value) { field = value }
@@ -66,7 +69,7 @@ class VerticalLayout {
 
     fun needReLayout(width: Int, height: Int, contentText: String) : Boolean
     {
-        return !(this.width == width && this.height == height && text == contentText)
+        return !(this.width == width && this.height == height && text == contentText && !needRelayoutFlag)
     }
 
     fun setSize(width: Int, height: Int) {
@@ -856,7 +859,7 @@ class VerticalLayout {
     }
 
     fun  getTouchedChar( page:Int , x: Float, y: Float): Int {
-        val array = charPositions.get(page)
+        val array = charPositions.get(page-1)
 
         var nearest : CharPoint = CharPoint( 1000000F , 0F , -1 )
         array?.forEach {
@@ -884,6 +887,7 @@ class VerticalLayout {
     fun onDoubleClick( pos:Int){
         onDoubleClickListener?.invoke(pos)
     }
+
 
 //    private fun printMeasureNanoTime( tag: String , block : ()->Unit ){
 //        val measured = measureNanoTime( block )

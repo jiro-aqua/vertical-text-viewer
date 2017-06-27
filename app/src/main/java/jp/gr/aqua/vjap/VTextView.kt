@@ -67,6 +67,11 @@ class VTextView : View {
         }
     }
 
+    fun getTappedPosition(x: Float , y :Float) : Int
+    {
+        return layout?.getTouchedChar(currentIndex , x, y) ?: - 1
+    }
+
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         layout = null

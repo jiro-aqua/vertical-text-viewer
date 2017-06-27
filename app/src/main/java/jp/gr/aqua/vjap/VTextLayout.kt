@@ -54,6 +54,7 @@ class VTextLayout : RelativeLayout {
     private val subscription = CompositeSubscription()
 
     private var gestureDetector: GestureDetector? = null
+    private var scaleGestureDetector: ScaleGestureDetector? = null
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -78,7 +79,7 @@ class VTextLayout : RelativeLayout {
                 val page = ReversedViewPager.MAX_PAGE - position - 1
                 val view = VTextView(context).apply{
                     setLayout(layout, page)
-                    tag = position
+                    tag = page
                 }
                 container.addView(view)
                 return view
@@ -158,6 +159,7 @@ class VTextLayout : RelativeLayout {
                 .doOnNext {
                     val (width,height) = it
                     if ( layout.needReLayout(width, height, contentText) ) {
+                        layout.needRelayoutFlag = false
                         layout.density = density
                         layout.scaledDensity = scaledDensity
                         layout.writingPaperMode = writingPaperMode
@@ -184,6 +186,7 @@ class VTextLayout : RelativeLayout {
                 },{it.printStackTrace()},{} ))
 
         gestureDetector = GestureDetector(context, GestureListener())
+        scaleGestureDetector = ScaleGestureDetector( context , ScaleGestureListener() )
     }
 
     internal fun updatePageText() {
@@ -249,6 +252,7 @@ class VTextLayout : RelativeLayout {
 //            lastTouchY = ev.y
 //        }
         gestureDetector?.onTouchEvent(ev)
+        scaleGestureDetector?.onTouchEvent(ev)
 
         return super.onInterceptTouchEvent(ev)
     }
@@ -332,12 +336,6 @@ class VTextLayout : RelativeLayout {
         layout.setOnDoubleClickListener(listener)
     }
 
-//    private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
-//    private val doubleTapTimeout by lazy { ViewConfiguration.getDoubleTapTimeout() }
-//    private var lastTapTime = 0L
-//    private var lastTouchX = 0F
-//    private var lastTouchY = 0F
-
     private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
 
         override fun onDown(e: MotionEvent): Boolean {
@@ -347,11 +345,40 @@ class VTextLayout : RelativeLayout {
         // event when double tap occurs
         override fun onDoubleTap(e: MotionEvent): Boolean {
             Log.d("=====>","Double Tapped! ${viewPager.currentItem}" )
-            val vtextview = findViewWithTag(viewPager.currentItem)
+            val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
             if ( vtextview is VTextView ){
                 vtextview.onDoubleTapped(e.x , e.y)
             }
             return true
+        }
+    }
+
+    private inner class ScaleGestureListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+
+        override fun onScaleEnd(detector: ScaleGestureDetector?) {
+            detector?.let{
+                val factor = it.scaleFactor
+                if ( layout.writingPaperMode ){
+                    val lastWritingPaperChars = writingPaperChars
+                    if ( factor < 1.0F ){
+                        writingPaperChars = 40
+                    }else{
+                        writingPaperChars = 20
+                    }
+                    val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
+                    if ( vtextview is VTextView && lastWritingPaperChars != writingPaperChars ) {
+                        val posx = it.focusX
+                        val posy = it.focusY
+                        val tappedPos = vtextview.getTappedPosition(posx,posy)
+                        val pos = if ( tappedPos != -1 ) tappedPos else getCurrentPosition()
+                        setInitialPosition(pos)
+                        layout.needRelayoutFlag = true
+                        val width = viewPager.width
+                        val height = viewPager.height
+                        layoutObservable.onNext(width to height)
+                    }
+                }
+            }
         }
     }
 

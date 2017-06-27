@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private val EXTRA_END = "EXTRA_END"
     private val EXTRA_POINTED = "EXTRA_POINTED"
 
-    private val WRITING_PAPER_CHARS = 40
+    private val WRITING_PAPER_CHARS = 20
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
