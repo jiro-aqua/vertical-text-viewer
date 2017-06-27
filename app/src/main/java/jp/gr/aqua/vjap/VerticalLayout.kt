@@ -36,6 +36,17 @@ class VerticalLayout {
     private val lines = ArrayList<Line>()
     private val charPositions = SparseArray<ArrayList<CharPoint>>()
 
+    private var latinCount = 0
+
+    var writingPaperMode : Boolean = false
+        set(value){ field = value }
+
+    var scaledDensity : Float = 1.0f
+        set(value) { field = value }
+
+    var density : Float = 1.0f
+        set(value) { field = value }
+
     fun clear() {
         charPositions.clear()
         lines.clear()
@@ -52,13 +63,23 @@ class VerticalLayout {
     fun setSize(width: Int, height: Int) {
         this.width = width
         this.height = height
+
+        // 原稿用紙モードではここでフォントサイズ・折り返し位置を計算
+        if ( writingPaperMode ){
+            val size = (( height - TOP_SPACE ) / 21.5F )
+
+            bodyStyle = TextStyle(size)
+            rubyStyle = TextStyle(size / 2)
+            rubyStyle.lineSpace = bodyStyle.lineSpace
+        }
     }
 
-    fun setFont(size: Int, typeface: Typeface, ipamincho: Boolean) {
+    fun setFont(_size: Int, typeface: Typeface, ipamincho: Boolean) {
+        val sizeF = _size.toFloat()
         mFace = typeface
         CharSetting.initCharMap(ipamincho)
-        bodyStyle = TextStyle(size)
-        rubyStyle = TextStyle(size / 2)
+        bodyStyle = TextStyle(sizeF)
+        rubyStyle = TextStyle(sizeF / 2)
         rubyStyle.lineSpace = bodyStyle.lineSpace
     }
 
@@ -80,19 +101,25 @@ class VerticalLayout {
     //文字描画関数
     private fun drawChar(canvas: Canvas?, vchar: VChar, pos: PointF, style: TextStyle) {
         if ( vchar.isEmpty() ) return
-        val firstChar = vchar.firstChar
         val setting = CharSetting.getSetting(vchar)
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
+        var half = false
         if (vchar.isLatin()) {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
+                latinCount ++
+                half = true
             } else {
                 if ( vchar.length != 2 || vchar.asString[1] == ' ') {
                     halfOffset = 0.2f
                 }
             }
+        }
+        if ( !half && latinCount % 2 != 0 && writingPaperMode){
+            pos.y += fontSpacing / 2
+            latinCount = 0
         }
         //描画スキップのフラグ
         if (canvas != null) {
@@ -168,7 +195,7 @@ class VerticalLayout {
             val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
             val wrapY = TOP_SPACE + fontSpace * wrapPosition
 
-            val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+            val wrap : Float = if ( writingPaperMode || wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
             var idx = 0
             _lines.clear()
@@ -192,7 +219,7 @@ class VerticalLayout {
             val origx = state.pos.x
             var x = origx
             val lineSpace1 = bodyStyle.lineSpace
-            val lineSpace2 = bodyStyle.lineSpace / 2
+            val lineSpace2 = if ( writingPaperMode ) bodyStyle.lineSpace else bodyStyle.lineSpace / 2
             val _LEFT_SPACE = LEFT_SPACE
             _lines.forEachIndexed {
                 lineidx, list ->
@@ -279,16 +306,22 @@ class VerticalLayout {
         //Log.d("debug", "width:"+width);
 
         var lineptr = 0
+
+        if ( page > pageIndex.size ){
+            return
+        }
+
         if (page > 0) {
             lineptr = pageIndex[page - 1]
         }
 
         val positionArray = ArrayList<CharPoint>()
 
-//        val paint = Paint().apply {
-//            style = Paint.Style.STROKE
-//        }
-
+        val linePaint = Paint().apply {
+            style = Paint.Style.STROKE
+            color = 0xFFBDC87A.toInt()
+            strokeWidth = Math.floor(density.toDouble()).toFloat()
+        }
         //描画
         val max = if ( page < pageIndex.size ) pageIndex[page] else lines.size
         while (lineptr < max ) {
@@ -296,16 +329,37 @@ class VerticalLayout {
             val line = lines[lineptr]
             var charptr = line.index
             val margin = calcMargin(line)
-            val lineSize = if (line.line.size > 0) { 1.0F }else { 0.5F }
+            val lineSize = if (line.line.size > 0 || writingPaperMode ) { 1.0F }else { 0.5F }
             val nextposx = state.pos.x - bodyStyle.lineSpace * lineSize
             val fontspace = bodyStyle.fontSpace
             val linespace = bodyStyle.lineSpace
             val length = line.line.size
+            val writingPaperAdjustY = fontspace * 0.10f
+
+            latinCount = 0
+
+            // 罫線の描画
+            if ( writingPaperMode ){
+                canvas?.apply {
+                    canvas.translate(0F,writingPaperAdjustY)
+                    val rect = RectF(state.pos.x,TOP_SPACE.toFloat(),state.pos.x+linespace,TOP_SPACE+fontspace*20.toFloat())
+                    drawRect(rect,linePaint)
+                    rect.right = state.pos.x + fontspace
+                    drawRect(rect,linePaint)
+                    for( col in 0..19 ){
+                        rect.top = TOP_SPACE.toFloat() + col * fontspace
+                        rect.bottom = TOP_SPACE.toFloat() + (col+1) * fontspace
+                        drawRect(rect,linePaint)
+                    }
+                    canvas.translate(0F,-writingPaperAdjustY)
+                }
+            }
+            // 文字の描画
             line.line.forEachIndexed {
                 index, str ->
                 state.str = str
                 val oldy = state.pos.y
-                val mar = if ( index == length -1 ) 0f else margin
+                val mar = if ( index == length -1 || writingPaperMode ) 0f else margin
                 charDrawProcess(canvas, state , mar)
                 val pointx = ( nextposx + linespace + state.pos.x + linespace ) / 2
                 val pointy = ( oldy - fontspace + state.pos.y - fontspace ) /2
@@ -460,6 +514,9 @@ class VerticalLayout {
         val rubyRubyEnd  = ruby.rubyEnd
         val checkRuby = ruby.isRuby
 
+        val writingPaperMode = this.writingPaperMode
+        var latinCount = 0
+
         while( idx < text.length ){
             val vchar = text.characterAt(idx,checkRuby)
             val len = vchar.length
@@ -498,11 +555,18 @@ class VerticalLayout {
             }
 
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
+            var half = false
             if (vchar.isLatin()) {
                 val setting = CharSetting.getSetting(vchar)
                 if (setting != null && setting.angle != 0.0f) {
                     pos -= fontSpace / 2
+                    latinCount ++
+                    half = true
                 }
+            }
+            if ( !half && latinCount % 2 != 0 && writingPaperMode ){
+                pos += fontSpace / 2
+                latinCount = 0
             }
 
             pos += fontSpace
@@ -592,7 +656,7 @@ class VerticalLayout {
         val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
         val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
 
-        val wrap : Float = if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+        val wrap : Float = if ( writingPaperMode || wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
         //if(checkHalf( s )) fontSpace /= 2;
         var pos = 0f
@@ -738,21 +802,25 @@ class VerticalLayout {
         }
     }
 
-    private inner class TextStyle internal constructor(size: Int) {
+    private inner class TextStyle internal constructor(size: Float) {
         internal var paint: Paint
         internal var fontSpace = 0F
         internal var lineSpace = 0F
 
         init {
             this.paint = Paint()
-            this.paint.textSize = size.toFloat()
+            this.paint.textSize = size
             this.paint.color = FONT_COLOR
             this.paint.typeface = mFace
             this.paint.isAntiAlias = true
             this.paint.isSubpixelText = true
 
-            this.fontSpace = size.toFloat()
-            this.lineSpace = this.fontSpace * 2
+            this.fontSpace = size
+            this.lineSpace = if ( writingPaperMode ){
+                this.fontSpace * 1.5F
+            }else{
+                this.fontSpace * 2F
+            }
         }
     }
 

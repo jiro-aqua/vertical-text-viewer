@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
             // 横向きの場合
             pr.getCharMaxLand()
         }
+        val writingPaperMode = pr.isWritingPaperMode()
 
         if(intent.action == intentAction ){
             val start = intent.getIntExtra(EXTRA_START,0)
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity() {
             vTextLayout.apply {
                 setText("")
                 setInitialPosition(position)
+                setWritingPaperMode(writingPaperMode)
                 setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
                         Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
                 setPadding(resources.getDimension(R.dimen.padding).toInt())

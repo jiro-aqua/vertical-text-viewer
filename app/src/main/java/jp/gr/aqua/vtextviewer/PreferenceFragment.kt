@@ -18,9 +18,20 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         val ps = pm.preferenceScreen
 
         // 原稿用紙モード
-        val fontkind = ps.findPreference(Preferences.KEY_FONT_SIZE)
+        val writingPaperModeEnabler : (value:Boolean)->Unit = {
+            value->
+            ps.findPreference(Preferences.KEY_FONT_SIZE).isEnabled = value
+            ps.findPreference(Preferences.KEY_CHAR_MAX_PORT).isEnabled = value
+            ps.findPreference(Preferences.KEY_CHAR_MAX_LAND).isEnabled = value
+        }
+
+        writingPaperModeEnabler( Preferences(context).isWritingPaperMode() )
+
         ps.findPreference(Preferences.KEY_WRITING_PAPER)
-                .setOnPreferenceChangeListener { preference, newValue -> if ( newValue is Boolean ) fontkind.setEnabled( !newValue ) ; true}
+                .setOnPreferenceChangeListener {
+                    preference, newValue -> if ( newValue is Boolean ) writingPaperModeEnabler( !newValue )
+                    true
+                }
 
         // IPAフォントについて
         ps.findPreference(Preferences.KEY_IPA)

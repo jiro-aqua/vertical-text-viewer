@@ -38,12 +38,15 @@ class VTextLayout : RelativeLayout {
     private var progressBar by Delegates.notNull<ProgressBar>()
 
     private var density: Float = 0.toFloat()
+    private var scaledDensity: Float = 0.toFloat()
 
     private var currentPage = 1
     private var contentText : String = ""
     private var position = 0
 
     private var wrapPosition = 0
+
+    private var writingPaperMode = false
 
     private val layoutObservable  = PublishSubject.create<Pair<Int,Int>>()
     private val subscription = CompositeSubscription()
@@ -124,6 +127,7 @@ class VTextLayout : RelativeLayout {
         progressBar = findViewById(R.id.vtextProgressBar) as ProgressBar
 
         density = resources.displayMetrics.density//画面クリック位置判定用
+        scaledDensity = resources.displayMetrics.scaledDensity // フォントサイズ計算用
 
         // ページ送りバー
         pagingBarLayout.visibility = View.GONE
@@ -152,6 +156,9 @@ class VTextLayout : RelativeLayout {
                 .doOnNext {
                     val (width,height) = it
                     if ( layout.needReLayout(width, height, contentText) ) {
+                        layout.density = density
+                        layout.scaledDensity = scaledDensity
+                        layout.writingPaperMode = writingPaperMode
                         layout.setSize(width, height)
                         layout.setWrapPosition(wrapPosition)
                         val measureTime = measureTimeMillis {
@@ -267,6 +274,10 @@ class VTextLayout : RelativeLayout {
 
     fun setWrapPosition(wrapPosition: Int) {
         this.wrapPosition = wrapPosition
+    }
+
+    fun setWritingPaperMode(writingPaperMode : Boolean) {
+        this.writingPaperMode = writingPaperMode
     }
 
     fun getCurrentPosition(): Int {
