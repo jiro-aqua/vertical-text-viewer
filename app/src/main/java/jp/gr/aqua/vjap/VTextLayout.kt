@@ -56,6 +56,12 @@ class VTextLayout : RelativeLayout {
     private var gestureDetector: GestureDetector? = null
     private var scaleGestureDetector: ScaleGestureDetector? = null
 
+    private val fontScales = arrayOf(0.62F,0.68F,0.75F,0.83F,0.90F,1.0F,1.1F,1.21F,1.33F,1.46F,1.61F,1.77F)
+    private var fontScale = 6
+    private var fontSize = 1
+    private var fontTypeface: Typeface? = null
+    private var fontIpamincho: Boolean = false
+
     constructor(context: Context) : super(context) {
         init(context)
     }
@@ -164,6 +170,7 @@ class VTextLayout : RelativeLayout {
                         layout.scaledDensity = scaledDensity
                         layout.writingPaperMode = writingPaperMode
                         layout.setWritingPaperChars(writingPaperChars)
+                        layout.setFont( (fontSize * fontScales[fontScale]).toInt() , fontTypeface!! , fontIpamincho)
                         layout.setSize(width, height)
                         layout.setWrapPosition(wrapPosition)
                         val measureTime = measureTimeMillis {
@@ -268,6 +275,9 @@ class VTextLayout : RelativeLayout {
 
     //フォント指定
     fun setFont(size: Int, typeface: Typeface, ipamincho: Boolean) {
+        fontSize = size
+        fontTypeface = typeface
+        fontIpamincho = ipamincho
         layout.setFont(size, typeface, ipamincho)
     }
 
@@ -367,6 +377,27 @@ class VTextLayout : RelativeLayout {
                     }
                     val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
                     if ( vtextview is VTextView && lastWritingPaperChars != writingPaperChars ) {
+                        val posx = it.focusX
+                        val posy = it.focusY
+                        val tappedPos = vtextview.getTappedPosition(posx,posy)
+                        val pos = if ( tappedPos != -1 ) tappedPos else getCurrentPosition()
+                        setInitialPosition(pos)
+                        layout.needRelayoutFlag = true
+                        val width = viewPager.width
+                        val height = viewPager.height
+                        layoutObservable.onNext(width to height)
+                    }
+                }else{
+                    val lastFontScale = fontScale
+                    if ( factor < 1.0F ){
+                        fontScale --
+                    }else{
+                        fontScale ++
+                    }
+                    if ( fontScale < 0 ) fontScale = 0
+                    if ( fontScale >= fontScales.size ) fontScale = fontScales.size - 1
+                    val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
+                    if ( vtextview is VTextView && lastFontScale != fontScale) {
                         val posx = it.focusX
                         val posy = it.focusY
                         val tappedPos = vtextview.getTappedPosition(posx,posy)
