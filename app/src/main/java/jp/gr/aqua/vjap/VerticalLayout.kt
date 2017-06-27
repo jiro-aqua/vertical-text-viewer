@@ -36,7 +36,16 @@ class VerticalLayout {
     private val lines = ArrayList<Line>()
     private val charPositions = SparseArray<ArrayList<CharPoint>>()
 
+    private var writingPaperChars = 1
     private var latinCount = 0
+
+    private val linePaint by lazy {
+        Paint().apply{
+            style = Paint.Style.STROKE
+            color = 0xFFBDC87A.toInt()
+            strokeWidth = Math.floor(density.toDouble()).toFloat()
+        }
+    }
 
     var writingPaperMode : Boolean = false
         set(value){ field = value }
@@ -66,7 +75,7 @@ class VerticalLayout {
 
         // 原稿用紙モードではここでフォントサイズ・折り返し位置を計算
         if ( writingPaperMode ){
-            val size = (( height - TOP_SPACE ) / 21.5F )
+            val size = (( height - TOP_SPACE ) / (writingPaperChars+1.5F) )
 
             bodyStyle = TextStyle(size)
             rubyStyle = TextStyle(size / 2)
@@ -92,6 +101,10 @@ class VerticalLayout {
 
     fun setWrapPosition(wrapPosition: Int) {
         this.wrapPosition = wrapPosition
+    }
+
+    fun setWritingPaperChars( chars : Int ){
+        writingPaperChars = chars
     }
 
     private fun setRubyMode(rubyMode : String) {
@@ -317,13 +330,40 @@ class VerticalLayout {
 
         val positionArray = ArrayList<CharPoint>()
 
-        val linePaint = Paint().apply {
-            style = Paint.Style.STROKE
-            color = 0xFFBDC87A.toInt()
-            strokeWidth = Math.floor(density.toDouble()).toFloat()
-        }
         //描画
         val max = if ( page < pageIndex.size ) pageIndex[page] else lines.size
+
+        // 原稿用紙部分描画
+        if ( writingPaperMode ){
+            val writingPaperAdjustY = bodyStyle.fontSpace * 0.10f
+            val fontspace = bodyStyle.fontSpace
+            val linespace = bodyStyle.lineSpace
+            val rect = RectF()
+            val linePaint = this.linePaint
+            val lineNum = max - lineptr
+            canvas?.apply {
+                var x = state.pos.x
+                for (i in 0..lineNum - 1) {
+                    translate(0F, writingPaperAdjustY)
+                    rect.left = x
+                    rect.top = TOP_SPACE.toFloat()
+                    rect.right = x + linespace
+                    rect.bottom = TOP_SPACE + fontspace * writingPaperChars.toFloat()
+                    drawRect(rect, linePaint)
+                    rect.right = x + fontspace
+                    drawRect(rect, linePaint)
+                    for (col in 0..writingPaperChars - 1 step 2) {
+                        rect.top = TOP_SPACE.toFloat() + col * fontspace
+                        rect.bottom = TOP_SPACE.toFloat() + (col + 1) * fontspace
+                        drawRect(rect, linePaint)
+                    }
+                    translate(0F, -writingPaperAdjustY)
+                    x -= linespace
+                }
+            }
+        }
+
+        // 文字部分を描画
         while (lineptr < max ) {
 
             val line = lines[lineptr]
@@ -334,26 +374,8 @@ class VerticalLayout {
             val fontspace = bodyStyle.fontSpace
             val linespace = bodyStyle.lineSpace
             val length = line.line.size
-            val writingPaperAdjustY = fontspace * 0.10f
-
             latinCount = 0
 
-            // 罫線の描画
-            if ( writingPaperMode ){
-                canvas?.apply {
-                    canvas.translate(0F,writingPaperAdjustY)
-                    val rect = RectF(state.pos.x,TOP_SPACE.toFloat(),state.pos.x+linespace,TOP_SPACE+fontspace*20.toFloat())
-                    drawRect(rect,linePaint)
-                    rect.right = state.pos.x + fontspace
-                    drawRect(rect,linePaint)
-                    for( col in 0..19 ){
-                        rect.top = TOP_SPACE.toFloat() + col * fontspace
-                        rect.bottom = TOP_SPACE.toFloat() + (col+1) * fontspace
-                        drawRect(rect,linePaint)
-                    }
-                    canvas.translate(0F,-writingPaperAdjustY)
-                }
-            }
             // 文字の描画
             line.line.forEachIndexed {
                 index, str ->

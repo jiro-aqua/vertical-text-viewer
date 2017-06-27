@@ -46,6 +46,8 @@ class VTextLayout : RelativeLayout {
 
     private var wrapPosition = 0
 
+    private var writingPaperChars : Int = 0
+
     private var writingPaperMode = false
 
     private val layoutObservable  = PublishSubject.create<Pair<Int,Int>>()
@@ -159,6 +161,7 @@ class VTextLayout : RelativeLayout {
                         layout.density = density
                         layout.scaledDensity = scaledDensity
                         layout.writingPaperMode = writingPaperMode
+                        layout.setWritingPaperChars(writingPaperChars)
                         layout.setSize(width, height)
                         layout.setWrapPosition(wrapPosition)
                         val measureTime = measureTimeMillis {
@@ -278,6 +281,10 @@ class VTextLayout : RelativeLayout {
 
     fun setWritingPaperMode(writingPaperMode : Boolean) {
         this.writingPaperMode = writingPaperMode
+    }
+
+    fun setWritingPaperChars(chars : Int) {
+        this.writingPaperChars = chars
     }
 
     fun getCurrentPosition(): Int {

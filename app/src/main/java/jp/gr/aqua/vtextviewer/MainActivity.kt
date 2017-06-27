@@ -22,6 +22,8 @@ class MainActivity : AppCompatActivity() {
     private val EXTRA_END = "EXTRA_END"
     private val EXTRA_POINTED = "EXTRA_POINTED"
 
+    private val WRITING_PAPER_CHARS = 40
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -51,6 +53,7 @@ class MainActivity : AppCompatActivity() {
                 setText("")
                 setInitialPosition(position)
                 setWritingPaperMode(writingPaperMode)
+                setWritingPaperChars(WRITING_PAPER_CHARS)
                 setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
                         Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
                 setPadding(resources.getDimension(R.dimen.padding).toInt())
