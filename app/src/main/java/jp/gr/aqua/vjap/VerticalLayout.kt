@@ -206,7 +206,7 @@ class VerticalLayout {
                     x -= lineSpace2
                 }
             }
-            _pageIndex.add(_lines.size-1)
+            _pageIndex.add(_lines.size)
 
             return pageIndex.size
         } else {
@@ -215,7 +215,8 @@ class VerticalLayout {
     }
 
     fun getIndexFromPage(page:Int):Int {
-        val line = lines[pageIndex[page]]
+        val lastLine = pageIndex[page]
+        val line = if ( lastLine < lines.size ) lines[lastLine] else lines[lines.size -1 ]
         if ( line.line.size > 0 ) {
             return line.index
         }else{ // 空行の時は後ろの行を探す
