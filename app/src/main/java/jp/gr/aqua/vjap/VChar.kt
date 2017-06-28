@@ -23,6 +23,10 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
     fun isEmpty() : Boolean = str?.isEmpty() ?: char=='\u0000'
     fun isNotEmpty() : Boolean = !isEmpty()
 
+    fun isKanji() : Boolean = isNotEmpty() &&
+            ( Character.UnicodeBlock.of(firstChar) === java.lang.Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                    || this.equals("々") || this.equals("〆") || this.equals("仝") || this.equals("〇") || this.equals("ヶ") )
+
     override fun equals(other: Any?) : Boolean{
         return if ( other is VChar ) {
             if (this.str != null && other.str != null) {
@@ -87,6 +91,8 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
             "・:;。.　 "
 
     private val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
+
+    //private val KANJI_INKCLUDE = "々仝〆〇ヶ"      // 青空文庫では漢字じゃないけどルビ判定で漢字とみなす文字
 
     override fun toString(): String {
         return this.asString

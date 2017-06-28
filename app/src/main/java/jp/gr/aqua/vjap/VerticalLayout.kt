@@ -478,7 +478,7 @@ class VerticalLayout {
             }
             if (state.str.equals(ruby.rubyStart) && //ルビ開始
                     (state.isRubyBody || state.isKanjiBlock)) { //ルビ開始状態であれば
-                if ( ruby.aozora && state.bodyText.isEmpty() ){ // 青空文庫モードで本文がなければルビ記号をそのまま出力する
+                if ( ruby.aozora && state.isRubyBody && state.bodyText.isEmpty() ){ // 青空文庫モードで本文がなければルビ記号をそのまま出力する
                     state.isRuby = false
                     state.isRubyBody = false
                     state.rubyText.clear()
@@ -503,7 +503,7 @@ class VerticalLayout {
             state.isKanjiBlock = if ( ruby.aozora ) {
 
                 //漢字判定はルビ開始判定の後に行う必要あり
-                val isKanji = state.str.isNotEmpty() && ( UnicodeBlock.of(state.str.firstChar) === UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS || state.str.equals("々") || state.str.equals("〆"))
+                val isKanji = state.str.isKanji()
 
                 //Log.d("kanji",state.str +":" + isKanji+state.isKanjiBlock);
                 if (isKanji && !state.isKanjiBlock) {
