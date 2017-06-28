@@ -1,7 +1,6 @@
 package jp.gr.aqua.vjap
 
 import android.graphics.*
-import android.util.Log
 import android.util.SparseArray
 import java.lang.Character.UnicodeBlock
 import java.util.*
@@ -116,7 +115,7 @@ class VerticalLayout {
     }
 
     //文字描画関数
-    private fun drawChar(canvas: Canvas?, vchar: VChar, pos: PointF, style: TextStyle) {
+    private fun drawChar(canvas: Canvas?, vchar: VChar, pos: PointF, style: TextStyle, withDot:Boolean ) {
         if ( vchar.isEmpty() ) return
         val setting = CharSetting.getSetting(vchar)
         val fontSpacing = style.fontSpace//paint.getFontSpacing();
@@ -153,6 +152,10 @@ class VerticalLayout {
                         style.paint)
                 canvas.restore()
             }
+            if ( withDot ){
+                val yoffset = if ( half ) 0.2f else 0.4f
+                canvas.drawCircle(pos.x + fontSpacing*1.2f , pos.y - fontSpacing * yoffset , fontSpacing * 0.1f , style.paint)
+            }
         }
     }
 
@@ -160,7 +163,7 @@ class VerticalLayout {
     private fun drawString(canvas: Canvas?, s: ArrayList<VChar>, pos: PointF, style: TextStyle) {
         s.forEach {
             str ->
-            canvas?.let{ drawChar(canvas, str, pos, style) }
+            canvas?.let{ drawChar(canvas, str, pos, style , false ) }
             pos.y += style.fontSpace
         }
     }
@@ -427,6 +430,14 @@ class VerticalLayout {
                     return VChar(str = ruby.bodyStart2!!, idx = i)
                 }
             }
+            if ( ruby.aozora ) {
+                if (this.startsWith(ruby.dotStart!!, startIndex = i)) {
+                    return VChar(ruby.dotStart!!, idx = i)
+                }
+                if (this.startsWith(ruby.dotEnd!!, startIndex = i)) {
+                    return VChar(ruby.dotEnd!!, idx = i)
+                }
+            }
             if (this.startsWith(ruby.rubyStart, startIndex = i)) {
                 return VChar(ruby.rubyStart, idx = i)
             }
@@ -517,6 +528,14 @@ class VerticalLayout {
                 state.bodyText.add(state.str)
                 return
             }
+            if ( state.str.equals(ruby.dotStart) ){  // 傍点開始
+                state.isDot = true
+                return
+            }
+            if ( state.str.equals(ruby.dotEnd) ){    // 傍点終了
+                state.isDot = false
+                return
+            }
         }
         //その他通常描字
 
@@ -524,7 +543,7 @@ class VerticalLayout {
         val style = bodyStyle
 
         //文字を描画して次へ
-        this.drawChar(canvas, state.str, state.pos, style )
+        this.drawChar(canvas, state.str, state.pos, style , state.isDot )
 
         state.pos.y += margin
         state.pos.y += style.fontSpace
@@ -546,6 +565,8 @@ class VerticalLayout {
         val rubyRubyStart = ruby.rubyStart
         val rubyRubyEnd  = ruby.rubyEnd
         val checkRuby = ruby.isRuby
+        val rubyDotStart = ruby.dotStart
+        val rubyDotEnd = ruby.dotEnd
 
         val writingPaperMode = this.writingPaperMode
         var latinCount = 0
@@ -556,6 +577,11 @@ class VerticalLayout {
             if ( vchar.str != null && checkRuby(vchar.str[0]) ) {
                 //ルビが振られている箇所とルビ部分の判定
                 if (vchar.str == rubyBodyStart1 || vchar.str == rubyBodyStart2) {            //ルビ本体開始
+                    result.add(vchar)
+                    idx += len
+                    continue
+                }
+                if ( vchar.str == rubyDotStart || vchar.str == rubyDotEnd ){    // 傍点開始／終了
                     result.add(vchar)
                     idx += len
                     continue
@@ -717,6 +743,9 @@ class VerticalLayout {
             if (str.equals(ruby.bodyStart1) || str.equals(ruby.bodyStart2)) {            //ルビ本体開始
                 return@forEach
             }
+            if ( str.equals(ruby.dotStart)  || str.equals(ruby.dotEnd) ){    // 傍点開始／終了
+                return@forEach
+            }
             if (str.equals(ruby.rubyStart)) { //ルビ開始状態であれば
                 if ( ruby.aozora && (last.equals(ruby.bodyStart1) || last.equals(ruby.bodyStart2)) ) { // 青空文庫モードで本文がなければルビ記号をそのまま出力する
                     isRuby = false
@@ -841,6 +870,8 @@ class VerticalLayout {
 
         internal var rubyStart = PointF()
         internal var rubyEnd = PointF()
+
+        internal var isDot = false
 
         init {
             rpos = PointF()
