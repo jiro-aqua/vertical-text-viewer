@@ -1,6 +1,7 @@
 package jp.gr.aqua.vjap
 
 import android.graphics.*
+import android.util.Log
 import android.util.SparseArray
 import java.lang.Character.UnicodeBlock
 import java.util.*
@@ -552,7 +553,7 @@ class VerticalLayout {
         while( idx < text.length ){
             val vchar = text.characterAt(idx,checkRuby)
             val len = vchar.length
-            if ( vchar.str != null && checkRuby.invoke(vchar.str[0]) ) {
+            if ( vchar.str != null && checkRuby(vchar.str[0]) ) {
                 //ルビが振られている箇所とルビ部分の判定
                 if (vchar.str == rubyBodyStart1 || vchar.str == rubyBodyStart2) {            //ルビ本体開始
                     result.add(vchar)
@@ -560,12 +561,19 @@ class VerticalLayout {
                     continue
                 }
                 if (vchar.str == rubyRubyStart) { //ルビ開始状態であれば
-                    result.add(vchar)
-                    idx += len
-                    isRuby = true
-                    continue
+                    val last = if ( result.size > 0 ) result.last() else null
+                    // 青空文庫モードで直前の文字が本体開始なら
+                    if ( last != null && ruby.aozora && ( last.equals(rubyBodyStart1) || last.equals(rubyBodyStart2) ) ){
+                        isRuby = false
+                        // 下に抜ける
+                    }else{
+                        result.add(vchar)
+                        idx += len
+                        isRuby = true
+                        continue
+                    }
                 }
-                if (vchar.str == rubyRubyEnd) {    //ルビ終了
+                if (isRuby && vchar.str == rubyRubyEnd) {    //ルビ終了
                     result.add(vchar)
                     idx += len
                     isRuby = false
@@ -695,19 +703,30 @@ class VerticalLayout {
 
         var isRuby = false
         var charcount = 0
+        var last = VChar()
+        var str = VChar()
+        //タイトルならスタイル変更
+        val style = bodyStyle
+        val fontSpacing = style.fontSpace//paint.getFontSpacing();
 
         line.line.forEach {
-            val str = it
+            last = str
+            str = it
 
             //ルビが振られている箇所とルビ部分の判定
             if (str.equals(ruby.bodyStart1) || str.equals(ruby.bodyStart2)) {            //ルビ本体開始
                 return@forEach
             }
             if (str.equals(ruby.rubyStart)) { //ルビ開始状態であれば
-                isRuby = true
-                return@forEach
+                if ( ruby.aozora && (last.equals(ruby.bodyStart1) || last.equals(ruby.bodyStart2)) ) { // 青空文庫モードで本文がなければルビ記号をそのまま出力する
+                    isRuby = false
+                    // 下に抜ける
+                }else {
+                    isRuby = true
+                    return@forEach
+                }
             }
-            if (str.equals(ruby.rubyEnd)) {    //ルビ終了
+            if (isRuby && str.equals(ruby.rubyEnd)) {    //ルビ終了
                 isRuby = false
                 return@forEach
             }
@@ -716,11 +735,7 @@ class VerticalLayout {
             }
             //その他通常文字
 
-            //タイトルならスタイル変更
-            val style = bodyStyle
-
             val setting = CharSetting.getSetting(str)
-            val fontSpacing = style.fontSpace//paint.getFontSpacing();
             //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
             if (str.isLatin()) {
                 if (setting != null && setting.angle != 0.0f) {

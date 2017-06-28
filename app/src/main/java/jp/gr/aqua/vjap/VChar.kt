@@ -12,7 +12,7 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
         get() = str?.get(0)?:char
 
     fun isLineBreak() : Boolean = char == '\n'
-    fun isLatin() : Boolean = char < '\u0080'
+    fun isLatin() : Boolean = '\u0000' < char  && char < '\u0080'
     fun isGyoumatuKinsoku() : Boolean = KINSOKU_GYOUMATU.contains(char)
     fun isGyoutouKinsoku() : Boolean = KINSOKU_GYOUTOU.contains(char)
     fun isBurasageKinsoku() : Boolean = KINSOKU_BURASAGE.contains(char)
