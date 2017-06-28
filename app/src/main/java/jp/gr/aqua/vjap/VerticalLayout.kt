@@ -466,10 +466,17 @@ class VerticalLayout {
             }
             if (state.str.equals(ruby.rubyStart) && //ルビ開始
                     (state.isRubyBody || state.isKanjiBlock)) { //ルビ開始状態であれば
-                state.isRuby = true
-                state.isRubyBody = false
-                state.rubyText.clear()
-                return
+                if ( ruby.aozora && state.bodyText.isEmpty() ){ // 青空文庫モードで本文がなければルビ記号をそのまま出力する
+                    state.isRuby = false
+                    state.isRubyBody = false
+                    state.rubyText.clear()
+                    // 下に抜ける
+                }else {
+                    state.isRuby = true
+                    state.isRubyBody = false
+                    state.rubyText.clear()
+                    return
+                }
             }
             if (state.str.equals(ruby.rubyEnd) && state.isRuby) {    //ルビ終了
                 drawString(canvas, state.bodyText, state.pos, bodyStyle )
