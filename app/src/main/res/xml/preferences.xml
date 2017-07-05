@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/category_settings">
+
+        <SwitchPreferenceCompat
+            android:key="background_black"
+            android:title="@string/background_black"
+            android:summary="@string/background_black_summary"
+            android:defaultValue="false"
+            />
+
         <SwitchPreferenceCompat
             android:key="writing_paper"
             android:title="@string/writing_paper"

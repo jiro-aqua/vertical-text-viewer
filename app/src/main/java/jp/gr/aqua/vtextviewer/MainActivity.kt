@@ -44,6 +44,16 @@ class MainActivity : AppCompatActivity() {
         }
         val writingPaperMode = pr.isWritingPaperMode()
 
+        val (fontColor,bgColor) =  if ( pr.isBackgroundBlack() ){
+            // 黒背景
+            @Suppress("DEPRECATION")
+            resources.getColor(R.color.color_white) to resources.getColor(R.color.color_black)
+        }else{
+            // 白背景
+            @Suppress("DEPRECATION")
+            resources.getColor(R.color.color_black) to resources.getColor(R.color.color_white)
+        }
+
         if(intent.action == intentAction ){
             val start = intent.getIntExtra(EXTRA_START,0)
             val end = intent.getIntExtra(EXTRA_END,0)
@@ -51,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             val uri = intent.data
             vTextLayout.apply {
                 setText("")
+                setColor(fontColor,bgColor)
                 setInitialPosition(position)
                 setWritingPaperMode(writingPaperMode)
                 setWritingPaperChars(WRITING_PAPER_CHARS)

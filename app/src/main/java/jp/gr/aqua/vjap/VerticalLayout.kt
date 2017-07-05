@@ -39,6 +39,9 @@ class VerticalLayout {
     private var writingPaperChars = 1
     private var latinCount = 0
 
+    private var FONT_COLOR : Int = 0
+    private var BG_COLOR : Int = 0
+
     var needRelayoutFlag = false
 
     private val linePaint by lazy {
@@ -122,7 +125,7 @@ class VerticalLayout {
         var halfOffset = 0f//縦書き半角文字の場合の中央寄せ
         //半角チェック　縦書きの場合 座標の基準値の扱いが縦横で変わるので、分割
         var half = false
-        if (vchar.isLatin()) {
+        if (vchar.isLatinString()) {
             if (setting != null && setting.angle != 0.0f) {
                 pos.y -= fontSpacing / 2
                 latinCount ++
@@ -907,10 +910,6 @@ class VerticalLayout {
             return pageIndex.size
         }
 
-    companion object {
-        private val FONT_COLOR = Color.BLACK
-    }
-
     fun  getTouchedChar( page:Int , x: Float, y: Float): Int {
         val array = charPositions.get(page-1)
 
@@ -941,6 +940,11 @@ class VerticalLayout {
         onDoubleClickListener?.invoke(pos)
     }
 
+
+    fun setColor( fontColor : Int , bgColor : Int) {
+        FONT_COLOR = fontColor
+        BG_COLOR = bgColor
+    }
 
 //    private fun printMeasureNanoTime( tag: String , block : ()->Unit ){
 //        val measured = measureNanoTime( block )

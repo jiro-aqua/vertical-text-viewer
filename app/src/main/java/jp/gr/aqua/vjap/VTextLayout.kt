@@ -1,6 +1,7 @@
 package jp.gr.aqua.vjap
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.support.v4.view.PagerAdapter
@@ -62,6 +63,9 @@ class VTextLayout : RelativeLayout {
     private var fontTypeface: Typeface? = null
     private var fontIpamincho: Boolean = false
 
+    private var fontColor = Color.BLACK
+    private var bgColor = Color.WHITE
+
     constructor(context: Context) : super(context) {
         init(context)
     }
@@ -84,6 +88,7 @@ class VTextLayout : RelativeLayout {
                 //ReversedViewPagerはsetCurrentItemを上書きしているが、ここで来るpositionは生のモノ
                 val page = ReversedViewPager.MAX_PAGE - position - 1
                 val view = VTextView(context).apply{
+                    setBackgroundColor(bgColor)
                     setLayout(layout, page)
                     tag = page
                 }
@@ -165,6 +170,7 @@ class VTextLayout : RelativeLayout {
                 .doOnNext {
                     val (width,height) = it
                     if ( layout.needReLayout(width, height, contentText) ) {
+                        layout.setColor(fontColor,bgColor)
                         layout.needRelayoutFlag = false
                         layout.density = density
                         layout.scaledDensity = scaledDensity
@@ -299,6 +305,14 @@ class VTextLayout : RelativeLayout {
 
     fun setWritingPaperChars(chars : Int) {
         this.writingPaperChars = chars
+    }
+
+    fun setColor(fontColor : Int, bgColor: Int) {
+        this.fontColor = fontColor
+        this.bgColor = bgColor
+
+        pageNumText.setTextColor(fontColor)
+        pageNumText.setBackgroundColor(bgColor)
     }
 
     fun getCurrentPosition(): Int {

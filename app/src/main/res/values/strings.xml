@@ -29,4 +29,7 @@
     <string name="permission_name">縦書きプレビュー</string>
     <string name="permission_description">縦書きプレビューを起動するための権限です</string>
 
+    <string name="background_black">黒背景を使う</string>
+    <string name="background_black_summary">黒地に白で描画します</string>
+
 </resources>
