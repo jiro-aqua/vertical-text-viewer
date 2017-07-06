@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         val (fontColor,bgColor) =  if ( pr.isBackgroundBlack() ){
             // 黒背景
             @Suppress("DEPRECATION")
-            resources.getColor(R.color.color_white) to resources.getColor(R.color.color_black)
+            resources.getColor(R.color.color_dkgray) to resources.getColor(R.color.color_black)
         }else{
             // 白背景
             @Suppress("DEPRECATION")
