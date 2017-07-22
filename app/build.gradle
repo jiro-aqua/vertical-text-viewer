@@ -9,8 +9,8 @@ android {
         applicationId "jp.gr.aqua.jota.vtextviewer"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 8
-        versionName "1.08"
+        versionCode 9
+        versionName "1.09"
     }
     buildTypes {
         release {
