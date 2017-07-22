@@ -81,7 +81,7 @@ class VerticalLayout {
 
         // 原稿用紙モードではここでフォントサイズ・折り返し位置を計算
         if ( writingPaperMode ){
-            val size = (( height - TOP_SPACE ) / (writingPaperChars+1.5F) )
+            val size = (( height - TOP_SPACE ) / (writingPaperChars+1.0F) )
 
             bodyStyle = TextStyle(size)
             rubyStyle = TextStyle(size / 2)
