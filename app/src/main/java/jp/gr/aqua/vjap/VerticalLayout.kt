@@ -81,7 +81,7 @@ class VerticalLayout {
 
         // 原稿用紙モードではここでフォントサイズ・折り返し位置を計算
         if ( writingPaperMode ){
-            val size = (( height - TOP_SPACE ) / (writingPaperChars+1.0F) )
+            val size = (( height - TOP_SPACE ) / (writingPaperChars+1.5F) )
 
             bodyStyle = TextStyle(size)
             rubyStyle = TextStyle(size / 2)
@@ -218,7 +218,7 @@ class VerticalLayout {
             val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
             val wrapY = TOP_SPACE + fontSpace * wrapPosition
 
-            val wrap : Float = if ( writingPaperMode || wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+            val wrap : Float = if ( writingPaperMode )  fontSpace * writingPaperChars + 1.0f else if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
             var idx = 0
             _lines.clear()
@@ -725,7 +725,7 @@ class VerticalLayout {
         val bottomY = (height - BOTTOM_SPACE).toFloat() - fontSpace/2
         val wrapY = TOP_SPACE + bodyStyle.fontSpace * wrapPosition
 
-        val wrap : Float = if ( writingPaperMode || wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
+        val wrap : Float = if ( writingPaperMode )  fontSpace * writingPaperChars else if ( wrapPosition == 0 || bottomY < wrapY ) bottomY else wrapY
 
         //if(checkHalf( s )) fontSpace /= 2;
         var pos = 0f
