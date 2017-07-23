@@ -3,13 +3,11 @@
     package="jp.gr.aqua.vtextviewer"
      >
 
-    <application
-        android:allowBackup="true"
-        android:fullBackupContent="true"
-        android:theme="@style/VtextAppTheme" >
+    <application>
         <activity
             android:name=".MainActivity"
             android:launchMode="standard"
+            android:theme="@style/VtextAppTheme"
             >
             <intent-filter>
                 <action android:name="jp.gr.aqua.jota.vtextviewer.ACTION_OPEN" />
