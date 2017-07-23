@@ -732,7 +732,7 @@ class VerticalLayout {
 
         var isRuby = false
         var charcount = 0
-        var last = VChar()
+        var last : VChar
         var str = VChar()
         //タイトルならスタイル変更
         val style = bodyStyle

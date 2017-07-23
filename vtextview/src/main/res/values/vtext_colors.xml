@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vtext_colorPrimary">#3F51B5</color>
+    <color name="vtext_colorPrimaryDark">#303F9F</color>
+    <color name="vtext_colorAccent">#FF4081</color>
+
+    <color name="vtext_color_black">#FF000000</color>
+    <color name="vtext_color_white">#FFFFFFFF</color>
+    <color name="vtext_color_dkgray">#FFcccccc</color>
+</resources>

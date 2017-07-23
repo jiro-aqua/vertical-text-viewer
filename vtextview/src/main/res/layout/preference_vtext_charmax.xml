@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:inputType="number"
             android:maxLines="1"
-            android:hint="@string/char_max_hint"
+            android:hint="@string/vtext_char_max_hint"
             />
 
     </LinearLayout>

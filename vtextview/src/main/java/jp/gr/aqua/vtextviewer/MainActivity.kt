@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_vtext_main)
 
         val position = savedInstanceState?.getInt(KEY_POSITION) ?: 0
 
@@ -47,11 +47,11 @@ class MainActivity : AppCompatActivity() {
         val (fontColor,bgColor) =  if ( pr.isBackgroundBlack() ){
             // 黒背景
             @Suppress("DEPRECATION")
-            resources.getColor(R.color.color_dkgray) to resources.getColor(R.color.color_black)
+            resources.getColor(R.color.vtext_color_dkgray) to resources.getColor(R.color.vtext_color_black)
         }else{
             // 白背景
             @Suppress("DEPRECATION")
-            resources.getColor(R.color.color_black) to resources.getColor(R.color.color_white)
+            resources.getColor(R.color.vtext_color_black) to resources.getColor(R.color.vtext_color_white)
         }
 
         if(intent.action == intentAction ){
@@ -65,9 +65,9 @@ class MainActivity : AppCompatActivity() {
                 setInitialPosition(position)
                 setWritingPaperMode(writingPaperMode)
                 setWritingPaperChars(WRITING_PAPER_CHARS)
-                setFont((fontSize * resources.getDimension(R.dimen.font_size_unit)).toInt(),
+                setFont((fontSize * resources.getDimension(R.dimen.vtext_font_size_unit)).toInt(),
                         Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
-                setPadding(resources.getDimension(R.dimen.padding).toInt())
+                setPadding(resources.getDimension(R.dimen.vtext_padding).toInt())
                 setWrapPosition(charMax)
             }
 

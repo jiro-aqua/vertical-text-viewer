@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/vtext_category_settings">
+
+        <SwitchPreferenceCompat
+            android:key="background_black"
+            android:title="@string/vtext_background_black"
+            android:summary="@string/vtext_background_black_summary"
+            android:defaultValue="false"
+            />
+
+        <SwitchPreferenceCompat
+            android:key="writing_paper"
+            android:title="@string/vtext_writing_paper"
+            android:summary="@string/vtext_writing_paper_summary"
+            android:defaultValue="false"
+            />
+
+        <ListPreference
+            android:key="font_kind"
+            android:title="@string/vtext_font_kind"
+            android:entries="@array/vtext_font_kind"
+            android:entryValues="@array/vtext_font_kind_value"
+            android:defaultValue="mincho"
+            />
+
+        <ListPreference
+            android:key="font_size"
+            android:title="@string/vtext_font_size"
+            android:entries="@array/vtext_font_size"
+            android:entryValues="@array/vtext_font_size_value"
+            android:defaultValue="16"
+            />
+
+        <EditTextPreference
+            android:key="char_max_port"
+            android:title="@string/vtext_char_max_port"
+            android:summary="@string/vtext_char_max_summary"
+            android:defaultValue="0"
+            android:dialogLayout="@layout/preference_vtext_charmax"
+            />
+
+        <EditTextPreference
+            android:key="char_max_land"
+            android:title="@string/vtext_char_max_land"
+            android:summary="@string/vtext_char_max_summary"
+            android:defaultValue="0"
+            android:dialogLayout="@layout/preference_vtext_charmax"
+            />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/vtext_category_information">
+        <Preference
+            android:key="about_ipa"
+            android:title="@string/vtext_about_ipa_font"
+            android:summary="@string/vtext_ipa_license">
+        </Preference>
+
+        <Preference
+            android:key="app_about"
+            android:title="@string/vtext_app_about"
+            >
+        </Preference>
+    </PreferenceCategory>
+</PreferenceScreen>

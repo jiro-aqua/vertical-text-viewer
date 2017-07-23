@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="jp.gr.aqua.vtextviewer"
+     >
+
+    <application
+        android:allowBackup="true"
+        android:fullBackupContent="true"
+        android:theme="@style/VtextAppTheme" >
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="standard"
+            >
+            <intent-filter>
+                <action android:name="jp.gr.aqua.jota.vtextviewer.ACTION_OPEN" />
+                <!--<action android:name="android.intent.action.SEND" />-->
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".PreferenceActivity"
+            android:theme="@style/VtextPreferenceTheme"
+            >
+            <intent-filter>
+                <action android:name="jp.gr.aqua.jota.vtextviewer.ACTION_SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

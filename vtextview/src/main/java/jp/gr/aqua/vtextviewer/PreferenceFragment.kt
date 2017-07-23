@@ -10,8 +10,8 @@ class PreferenceFragment : PreferenceFragmentCompat() {
     private var mListener: OnFragmentInteractionListener? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        // Load the preferences from an XML resource
-        setPreferencesFromResource(R.xml.preferences, rootKey)
+        // Load the vtext_preferences from an XML resource
+        setPreferencesFromResource(R.xml.vtext_preferences, rootKey)
 
         val pm = preferenceManager
 
@@ -35,7 +35,7 @@ class PreferenceFragment : PreferenceFragmentCompat() {
 
         // IPAフォントについて
         ps.findPreference(Preferences.KEY_IPA)
-            .setOnPreferenceClickListener { showMessage(R.string.about_ipa_font , "IPA_Font_License_Agreement_v1.0.txt" ) }
+            .setOnPreferenceClickListener { showMessage(R.string.vtext_about_ipa_font , "IPA_Font_License_Agreement_v1.0.txt" ) }
 
         // バージョン
         ps.findPreference(Preferences.KEY_ABOUT)
@@ -64,7 +64,7 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         AlertDialog.Builder(context)
                 .setTitle(titleResId)
                 .setMessage(message)
-                .setPositiveButton(R.string.ok,null)
+                .setPositiveButton(R.string.vtext_ok,null)
                 .show()
 
         return false

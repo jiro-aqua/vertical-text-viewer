@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <array name="font_kind">
-        <item>@string/font_kind_mincho</item>
-        <item>@string/font_kind_gothic</item>
+    <array name="vtext_font_kind">
+        <item>@string/vtext_font_kind_mincho</item>
+        <item>@string/vtext_font_kind_gothic</item>
     </array>
-    <array name="font_kind_value">
+    <array name="vtext_font_kind_value">
         <item>mincho</item>
         <item>gothic</item>
     </array>
 
-    <string-array name="font_size">
+    <string-array name="vtext_font_size">
         <item>12sp</item>
         <item>16sp</item>
         <item>20sp</item>
         <item>24sp</item>
     </string-array>
 
-    <string-array name="font_size_value">
+    <string-array name="vtext_font_size_value">
         <item>12</item>
         <item>16</item>
         <item>20</item>

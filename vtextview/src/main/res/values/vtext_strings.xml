@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="vtext_app_name">縦書きプレビュー</string>
+
+    <string name="vtext_ok">OK</string>
+    <string name="vtext_about_ipa_font">IPAフォントについて</string>
+    <string name="vtext_ipa_license">IPAフォントライセンスv1.0</string>
+
+    <string name="vtext_app_about">このアプリについて</string>
+    <string name="vtext_app_usage">使い方</string>
+
+    <string name="vtext_font_size">フォントのサイズ</string>
+    <string name="vtext_font_kind">フォントの種類</string>
+    <string name="vtext_font_kind_mincho">IPA明朝</string>
+    <string name="vtext_font_kind_gothic">IPAゴシック</string>
+
+    <string name="vtext_char_max_port">折り返し文字数(縦画面)</string>
+    <string name="vtext_char_max_land">折り返し文字数(横画面)</string>
+    <string name="vtext_char_max_summary">一行当たりの文字数を設定します</string>
+    <string name="vtext_char_max_hint">0:画面端で折返し</string>
+
+    <string name="vtext_writing_paper">原稿用紙モード</string>
+    <string name="vtext_writing_paper_summary">原稿用紙風に一行20文字で表示します。</string>
+
+    <string name="vtext_category_settings">設定</string>
+    <string name="vtext_category_information">情報</string>
+
+    <string name="vtext_permission_name">縦書きプレビュー</string>
+    <string name="vtext_permission_description">縦書きプレビューを起動するための権限です</string>
+
+    <string name="vtext_background_black">黒背景を使う</string>
+    <string name="vtext_background_black_summary">黒地に白で描画します</string>
+
+</resources>

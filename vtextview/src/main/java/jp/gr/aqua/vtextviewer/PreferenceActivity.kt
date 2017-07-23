@@ -8,6 +8,6 @@ class PreferenceActivity : AppCompatActivity(), PreferenceFragment.OnFragmentInt
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_preference)
+        setContentView(R.layout.activity_vtext_preference)
     }
 }
