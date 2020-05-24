@@ -5,7 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import jp.gr.aqua.vjap.VTextLayout
 import rx.Single
 import rx.android.schedulers.AndroidSchedulers
@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                 setWrapPosition(charMax)
             }
 
-            Single.just(uri)
+            Single.just(uri!!)
                     .subscribeOn(Schedulers.io())
                     .map { loadContent(it) }
                     .observeOn(AndroidSchedulers.mainThread())
@@ -114,23 +114,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState?.apply{
+        outState.apply{
             putInt(KEY_POSITION, vTextLayout.getCurrentPosition())
         }
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        savedInstanceState?.apply{
+        savedInstanceState.apply{
             vTextLayout.setInitialPosition(getInt(KEY_POSITION))
         }
     }
 
     @Throws(Exception::class)
     private fun loadContent(uri: Uri): String {
-        return contentResolver.openInputStream(uri).bufferedReader(charset = Charsets.UTF_8).use { it.readText() }
+        return contentResolver.openInputStream(uri)?.bufferedReader(charset = Charsets.UTF_8).use { it!!.readText() }
     }
 
     override fun onBackPressed() {

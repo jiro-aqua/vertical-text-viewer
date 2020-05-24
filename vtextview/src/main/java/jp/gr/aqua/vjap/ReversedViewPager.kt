@@ -3,8 +3,8 @@ package jp.gr.aqua.vjap
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.v4.view.PagerAdapter
-import android.support.v4.view.ViewPager
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import android.util.AttributeSet
 import android.view.MotionEvent
 import java.util.*
@@ -80,7 +80,7 @@ class ReversedViewPager : ViewPager {
     }
 
 
-    override fun setAdapter(arg0: PagerAdapter) {
+    override fun setAdapter(arg0: PagerAdapter?) {
         super.setAdapter(arg0)
         this.setCurrentItem(0, false)
     }

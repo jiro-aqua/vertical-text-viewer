@@ -4,8 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
-import android.support.v4.view.PagerAdapter
-import android.support.v4.view.ViewPager.OnPageChangeListener
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -195,7 +195,7 @@ class VTextLayout : RelativeLayout {
                     currentPage = layout.getPageByPosition(position)
                     updatePageText()
                     viewPager.setCurrentItem(currentPage, false)
-                    viewPager.adapter.notifyDataSetChanged()
+                    viewPager.adapter!!.notifyDataSetChanged()
                 },{it.printStackTrace()},{} ))
 
         gestureDetector = GestureDetector(context, GestureListener())
@@ -369,7 +369,7 @@ class VTextLayout : RelativeLayout {
         // event when double tap occurs
         override fun onDoubleTap(e: MotionEvent): Boolean {
             Log.d("=====>","Double Tapped! ${viewPager.currentItem}" )
-            val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
+            val vtextview = viewPager.findViewWithTag<VTextView>(viewPager.currentItem)
             if ( vtextview is VTextView ){
                 vtextview.onDoubleTapped(e.x , e.y)
             }
@@ -389,7 +389,7 @@ class VTextLayout : RelativeLayout {
                     }else{
                         writingPaperChars = 20
                     }
-                    val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
+                    val vtextview = viewPager.findViewWithTag<VTextView>(viewPager.currentItem)
                     if ( vtextview is VTextView && lastWritingPaperChars != writingPaperChars ) {
                         val posx = it.focusX
                         val posy = it.focusY
@@ -410,7 +410,7 @@ class VTextLayout : RelativeLayout {
                     }
                     if ( fontScale < 0 ) fontScale = 0
                     if ( fontScale >= fontScales.size ) fontScale = fontScales.size - 1
-                    val vtextview = viewPager.findViewWithTag(viewPager.currentItem)
+                    val vtextview = viewPager.findViewWithTag<VTextView>(viewPager.currentItem)
                     if ( vtextview is VTextView && lastFontScale != fontScale) {
                         val posx = it.focusX
                         val posy = it.focusY

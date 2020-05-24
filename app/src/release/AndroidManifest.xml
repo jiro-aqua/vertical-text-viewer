@@ -3,8 +3,8 @@
     package="jp.gr.aqua.vtextviewer.app"
     >
     <permission android:name="jp.sblo.pandora.jota.VTEXTVIEWER"
-        android:label="@string/permission_name"
-        android:description="@string/permission_description"
+        android:label="@string/vtext_permission_name"
+        android:description="@string/vtext_permission_description"
         android:protectionLevel="signature" />
 
     <application>

@@ -22,23 +22,23 @@ class Preferences(context: Context){
 
     fun getFontKind() : String
     {
-        return sp.getString(KEY_FONT_KIND,"mincho")
+        return sp.getString(KEY_FONT_KIND,null) ?: "mincho"
     }
 
     fun getFontSize() : Int
     {
-        val fontsize = sp.getString(KEY_FONT_SIZE,"16")
+        val fontsize = sp.getString(KEY_FONT_SIZE,null) ?: "16"
         return fontsize.toInt()
     }
 
     fun getCharMaxPort() : Int
     {
-        return sp.getString(KEY_CHAR_MAX_PORT,"0").toIntSafety()
+        return (sp.getString(KEY_CHAR_MAX_PORT,null) ?: "0").toIntSafety()
     }
 
     fun getCharMaxLand() : Int
     {
-        return sp.getString(KEY_CHAR_MAX_LAND,"0").toIntSafety()
+        return ( sp.getString(KEY_CHAR_MAX_LAND,null) ?: "0").toIntSafety()
     }
 
     fun isWritingPaperMode() : Boolean

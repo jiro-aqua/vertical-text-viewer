@@ -2,7 +2,7 @@ package jp.gr.aqua.vtextviewer
 
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 
 class PreferenceActivity : AppCompatActivity(), PreferenceFragment.OnFragmentInteractionListener {
 
