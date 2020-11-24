@@ -72,6 +72,11 @@ internal class CharSetting {
                 CharSetting('―', 90.0f, -0.8f, -0.1f), CharSetting('―', 90.0f, -0.8f, -0.1f),
                 CharSetting('−', 90.0f, -0.8f, -0.1f),
 
+                CharSetting('↑', 90.0f, -0.8f, -0.1f),
+                CharSetting('↓', 90.0f, -0.8f, -0.1f),
+                CharSetting('←', 90.0f, -0.8f, -0.1f),
+                CharSetting('→', 90.0f, -0.8f, -0.1f),
+
                 CharSetting('.', 0.0f, 0.7f, -0.6f), CharSetting(',', 0.0f, 0.7f, -0.6f),
                 CharSetting('(', 90.0f, -0.3f, -0.15f), CharSetting(')', 90.0f, -0.3f, -0.15f),
                 CharSetting('[', 90.0f, -0.3f, -0.13f), CharSetting(']', 90.0f, -0.3f, -0.13f),

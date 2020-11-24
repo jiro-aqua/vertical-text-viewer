@@ -2,9 +2,10 @@ package jp.gr.aqua.vtextviewer
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.preference.*
-import java.lang.ref.Reference
+
 
 class PreferenceFragment : PreferenceFragmentCompat() {
 
@@ -19,29 +20,40 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         val ps = pm.preferenceScreen
 
         // 原稿用紙モード
-        val writingPaperModeEnabler : (value:Boolean)->Unit = {
-            value->
+        val writingPaperModeEnabler : (value: Boolean)->Unit = { value->
             ps.findPreference<Preference>(Preferences.KEY_FONT_SIZE)?.isEnabled = !value
             ps.findPreference<Preference>(Preferences.KEY_CHAR_MAX_PORT)?.isEnabled = !value
             ps.findPreference<Preference>(Preferences.KEY_CHAR_MAX_LAND)?.isEnabled = !value
         }
 
-        writingPaperModeEnabler( Preferences(requireContext()).isWritingPaperMode() )
+        writingPaperModeEnabler(Preferences(requireContext()).isWritingPaperMode())
 
         ps.findPreference<Preference>(Preferences.KEY_WRITING_PAPER)
-                ?.setOnPreferenceChangeListener {
-                    _, newValue -> if ( newValue is Boolean ) writingPaperModeEnabler( newValue )
+                ?.setOnPreferenceChangeListener { _, newValue -> if ( newValue is Boolean ) writingPaperModeEnabler(newValue)
                     true
                 }
 
         // IPAフォントについて
         ps.findPreference<Preference>(Preferences.KEY_IPA)
-            ?.setOnPreferenceClickListener { showMessage(R.string.vtext_about_ipa_font , "IPA_Font_License_Agreement_v1.0.txt" ) }
+            ?.setOnPreferenceClickListener { showMessage(R.string.vtext_about_ipa_font, "IPA_Font_License_Agreement_v1.0.txt") }
 
         // バージョン
         ps.findPreference<Preference>(Preferences.KEY_ABOUT)
-                ?.setSummary("version: ${BuildConfig.VERSION_NAME} (c)Aquamarine Networks.")
+                ?.setSummary("version: ${versionName} (c)Aquamarine Networks.")
 
+    }
+
+    private val versionName: String
+        get() {
+        val pm = requireActivity().packageManager
+        var versionName = ""
+        try {
+            val packageInfo = pm.getPackageInfo(requireActivity().packageName, 0)
+            versionName = packageInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
+        return versionName
     }
 
     override fun onAttach(context: Context) {
@@ -60,12 +72,12 @@ class PreferenceFragment : PreferenceFragmentCompat() {
 
     interface OnFragmentInteractionListener
 
-    private fun showMessage(titleResId : Int , assetText:String) : Boolean {
-        val message = requireContext().assets.open(assetText).reader(charset=Charsets.UTF_8).use{it.readText()}
+    private fun showMessage(titleResId: Int, assetText: String) : Boolean {
+        val message = requireContext().assets.open(assetText).reader(charset = Charsets.UTF_8).use{it.readText()}
         AlertDialog.Builder(requireContext())
                 .setTitle(titleResId)
                 .setMessage(message)
-                .setPositiveButton(R.string.vtext_ok,null)
+                .setPositiveButton(R.string.vtext_ok, null)
                 .show()
 
         return false
