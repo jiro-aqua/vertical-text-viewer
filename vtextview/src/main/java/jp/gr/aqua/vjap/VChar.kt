@@ -67,9 +67,9 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
     fun kind() : Int
     {
         val ch = firstChar
-        if ( '0' <= ch && ch <= '9') return 1
-        if ( 'A' <= ch && ch <= 'Z') return 2
-        if ( 'a' <= ch && ch <= 'z') return 2
+        if (ch in '0'..'9') return 1
+        if (ch in 'A'..'Z') return 2
+        if (ch in 'a'..'z') return 2
         return 0
     }
     fun isHalfAlNum() : Boolean = kind() != 0
@@ -86,17 +86,19 @@ data class VChar(val str : String? = null , val char : Char = '\u0000' , val idx
         return VChar(this.asString + next)
     }
 
-    private val KINSOKU_BURASAGE = ",、。.　 "
+    companion object{
+        private const val KINSOKU_BURASAGE = ",、。.　 "
 
-    private val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
-            "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
-            "‐゠–〜～"+
-            "？！?!‼⁇⁈⁉"+
-            "・:;。.　 "
+        private const val KINSOKU_GYOUTOU = ",)]｝、〕〉》」』】〙〗〟’”｠»）" +
+                "ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇳㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻"+
+                "‐゠–〜～"+
+                "？！?!‼⁇⁈⁉"+
+                "・:;。.　 "
 
-    private val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
+        private const val KINSOKU_GYOUMATU = "([｛〔〈《「『【〘〖〝‘“｟«"
 
-    //private val KANJI_INKCLUDE = "々仝〆〇ヶ"      // 青空文庫では漢字じゃないけどルビ判定で漢字とみなす文字
+        //private val KANJI_INKCLUDE = "々仝〆〇ヶ"      // 青空文庫では漢字じゃないけどルビ判定で漢字とみなす文字
+    }
 
     override fun toString(): String {
         return this.asString

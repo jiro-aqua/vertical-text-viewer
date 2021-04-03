@@ -3,6 +3,7 @@ package jp.gr.aqua.vjap
 import android.graphics.*
 import android.util.SparseArray
 import java.lang.Character.UnicodeBlock
+import java.lang.Exception
 import java.util.*
 import kotlin.properties.Delegates
 
@@ -629,6 +630,23 @@ class VerticalLayout {
                 val setting = CharSetting.getSetting(vchar)
                 if (setting != null && setting.angle != 0.0f) {
                     pos -= fontSpace / 2
+
+                    // この文字が英数字で、かつ、次の文字が英数字でなければサイズを1文字分に戻す
+                    if ( !writingPaperMode ) {
+                        val lastKind = try {
+                            result.last().kind()
+                        } catch (e: Exception) {
+                            0
+                        }
+                        val nextKind = try {
+                            text.characterAt(idx + 1, checkRuby).kind()
+                        } catch (e: Exception) {
+                            0
+                        }
+                        if (lastKind == 0 && vchar.kind() != 0 && nextKind == 0) {
+                            pos += fontSpace / 2
+                        }
+                    }
                     latinCount ++
                     half = true
                 }
