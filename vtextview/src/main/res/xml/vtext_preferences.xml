@@ -56,6 +56,18 @@
         </Preference>
 
         <Preference
+            android:key="about_morisawa_mincho"
+            android:title="@string/vtext_about_morisawa_mincho"
+            android:summary="@string/vtext_open_font_license">
+        </Preference>
+
+        <Preference
+            android:key="about_morisawa_gothic"
+            android:title="@string/vtext_about_morisawa_gothic"
+            android:summary="@string/vtext_open_font_license">
+        </Preference>
+
+        <Preference
             android:key="app_about"
             android:title="@string/vtext_app_about"
             >

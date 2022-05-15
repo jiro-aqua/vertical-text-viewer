@@ -3,45 +3,27 @@ package jp.gr.aqua.vjap
 
 import java.util.*
 
-internal class CharSetting {
-
-    val charcter: Char
-    val angle: Float
+internal data class CharSetting(
+    val charcter: Char,
+    val angle: Float,
 
     /**
      * xの差分
      * Paint#getFontSpacing() * xが足される
      * -0.5fが設定さsれた場合、1/2文字分左にずれる
      */
-    val x: Float
+    val x: Float,
 
     /**
      * yの差分
      * Paint#getFontSpacing() * yが足される
      * -0.5fが設定された場合、1/2文字分上にずれる
      */
-    val y: Float
+    val y: Float,
 
-    val scaleX: Float
-    val scaleY: Float
-
-    private constructor(charcter: Char, angle: Float, x: Float, y: Float) : super() {
-        this.charcter = charcter
-        this.angle = angle
-        this.x = x
-        this.y = y
-        this.scaleX = 1.0f
-        this.scaleY = 1.0f
-    }
-
-    private constructor(charcter: Char, angle: Float, x: Float, y: Float, scaleX: Float, scaleY: Float) : super() {
-        this.charcter = charcter
-        this.angle = angle
-        this.x = x
-        this.y = y
-        this.scaleX = scaleX
-        this.scaleY = scaleY
-    }
+    val scaleX: Float = 1.0F,
+    val scaleY: Float = 1.0F,
+) {
 
     companion object {
 

@@ -6,23 +6,25 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import jp.gr.aqua.vjap.VTextLayout
-import rx.Single
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
-    private val KEY_POSITION = "position"
+    companion object {
+        private const val KEY_POSITION = "position"
+        private const val intentAction = "jp.gr.aqua.jota.vtextviewer.ACTION_OPEN"
+        //private val mimeType = "text/plain"
+        private const val EXTRA_START = "EXTRA_START"
+        private const val EXTRA_END = "EXTRA_END"
+        private const val EXTRA_POINTED = "EXTRA_POINTED"
+
+        private const val WRITING_PAPER_CHARS = 20
+    }
     private val vTextLayout by lazy { findViewById(R.id.vTextLayout) as VTextLayout }
-
-    private val intentAction = "jp.gr.aqua.jota.vtextviewer.ACTION_OPEN"
-    //private val mimeType = "text/plain"
-    private val EXTRA_START = "EXTRA_START"
-    private val EXTRA_END = "EXTRA_END"
-    private val EXTRA_POINTED = "EXTRA_POINTED"
-
-    private val WRITING_PAPER_CHARS = 20
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +35,12 @@ class MainActivity : AppCompatActivity() {
         // 設定読込
         val pr = Preferences(this)
         val fontKind = pr.getFontKind()
-        val fontSet = if ( fontKind=="mincho") "ipam.ttf" to true else "ipag.ttf" to false
+        val fontSet = when ( fontKind ) {
+            "mincho" -> "ipam.ttf" to true
+            "morisawa_mincho" -> "BIZUDMincho-Regular.ttf" to true
+            "morisawa_gothic" -> "BIZUDGothic-Regular.ttf" to false
+            else /*"gothic"*/ -> "ipag.ttf" to false
+        }
         val fontSize = pr.getFontSize()
         val charMax = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             // 縦向きの場合
@@ -71,31 +78,26 @@ class MainActivity : AppCompatActivity() {
                 setWrapPosition(charMax)
             }
 
-            Single.just(uri!!)
-                    .subscribeOn(Schedulers.io())
-                    .map { loadContent(it) }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            {
-                                text ->
-                                text?.let {
-                                    vTextLayout.apply{
-                                        setText(it)
-                                        if ( position == 0 ){
-                                            setInitialPosition((start+end)/2)
-                                        }
-                                        reLayoutChildren()
-                                    }
-                                } ?: finish()
-                            },
-                            {
-                                it.printStackTrace()
-                                finish()
+            lifecycleScope.launch {
+                try{
+                    val text = withContext(Dispatchers.IO){
+                        loadContent(uri!!)
+                    }
+                    text.let {
+                        vTextLayout.apply{
+                            setText(it)
+                            if ( position == 0 ){
+                                setInitialPosition((start+end)/2)
                             }
-                    )
-
-
-
+                            reLayoutChildren()
+                        }
+                    }
+                }
+                catch (e:Exception){
+                    e.printStackTrace()
+                    finish()
+                }
+            }
         }else{
             finish()
         }

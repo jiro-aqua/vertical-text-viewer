@@ -37,6 +37,14 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         ps.findPreference<Preference>(Preferences.KEY_IPA)
             ?.setOnPreferenceClickListener { showMessage(R.string.vtext_about_ipa_font, "IPA_Font_License_Agreement_v1.0.txt") }
 
+        // モリサワ BIZ UD明朝フォントについて
+        ps.findPreference<Preference>(Preferences.KEY_ABOUT_MORISAWA_MINCHO)
+            ?.setOnPreferenceClickListener { showMessage(R.string.vtext_about_morisawa_mincho, "OFL_bizmincho.txt") }
+
+        // モリサワ BIZ UDゴシックフォントについて
+        ps.findPreference<Preference>(Preferences.KEY_ABOUT_MORISAWA_GOTHIC)
+            ?.setOnPreferenceClickListener { showMessage(R.string.vtext_about_morisawa_gothic, "OFL_bizgothic.txt") }
+
         // バージョン
         ps.findPreference<Preference>(Preferences.KEY_ABOUT)
                 ?.setSummary("version: ${versionName} (c)Aquamarine Networks.")

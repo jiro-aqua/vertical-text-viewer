@@ -7,6 +7,10 @@
     <string name="vtext_about_ipa_font">IPAフォントについて</string>
     <string name="vtext_ipa_license">IPAフォントライセンスv1.0</string>
 
+    <string name="vtext_about_morisawa_mincho">モリサワ BIZ UD明朝フォントについて</string>
+    <string name="vtext_about_morisawa_gothic">モリサワ BIZ UDゴシックフォントについて</string>
+    <string name="vtext_open_font_license">SIL Open Font License Version 1.1</string>
+
     <string name="vtext_app_about">このアプリについて</string>
     <string name="vtext_app_usage">使い方</string>
 
@@ -14,6 +18,8 @@
     <string name="vtext_font_kind">フォントの種類</string>
     <string name="vtext_font_kind_mincho">IPA明朝</string>
     <string name="vtext_font_kind_gothic">IPAゴシック</string>
+    <string name="vtext_font_kind_morisawa_mincho">モリサワ BIZ UD明朝</string>
+    <string name="vtext_font_kind_morisawa_gothic">モリサワ BIZ UDゴシック</string>
 
     <string name="vtext_char_max_port">折り返し文字数(縦画面)</string>
     <string name="vtext_char_max_land">折り返し文字数(横画面)</string>

@@ -4,8 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
-import androidx.viewpager.widget.PagerAdapter
-import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -14,19 +12,26 @@ import android.widget.RelativeLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager.OnPageChangeListener
 import jp.gr.aqua.vtextviewer.BuildConfig
 import jp.gr.aqua.vtextviewer.R
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
-import rx.subjects.PublishSubject
-import rx.subscriptions.CompositeSubscription
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlin.properties.Delegates
 import kotlin.system.measureTimeMillis
 
 
 class VTextLayout : RelativeLayout {
 
-    private val PAGING_BAR_SIZE = 60f
+    companion object {
+        private const val PAGING_BAR_SIZE = 60f
+    }
+
 
     private val layout = VerticalLayout()
 
@@ -51,8 +56,8 @@ class VTextLayout : RelativeLayout {
 
     private var writingPaperMode = false
 
-    private val layoutObservable  = PublishSubject.create<Pair<Int,Int>>()
-    private val subscription = CompositeSubscription()
+    private val layoutObservable  = MutableSharedFlow<Pair<Int,Int>>()
+    private var job : Job? = null
 
     private var gestureDetector: GestureDetector? = null
     private var scaleGestureDetector: ScaleGestureDetector? = null
@@ -66,6 +71,23 @@ class VTextLayout : RelativeLayout {
     private var fontColor = Color.BLACK
     private var bgColor = Color.WHITE
 
+    // CoroutineStart.UNDISPATCHED　を指定してlaunchすると、emitが同時に呼ばれない限りスレッド切り替えが発生しない
+    private val scope = CoroutineScope(Job() + Dispatchers.Main)
+
+    // scope内でemitする。ここ以外では、直接emit()を呼ばないこと。
+    private fun <T> MutableSharedFlow<T>.emitInScope(param: T) {
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            emit(param)
+        }
+    }
+
+    // scope内でcollectする
+    private fun <T> Flow<T>.observe(block: suspend (T) -> Unit) {
+        scope.launch {
+            collect(block)
+        }
+    }
+
     constructor(context: Context) : super(context) {
         init(context)
     }
@@ -78,7 +100,7 @@ class VTextLayout : RelativeLayout {
         init(context)
     }
 
-    fun init(context: Context) {
+    private fun init(context: Context) {
         LayoutInflater.from(context).inflate(R.layout.view_vtext, this)
 
         //アダプター作成
@@ -164,51 +186,60 @@ class VTextLayout : RelativeLayout {
         progressBar.visibility = View.VISIBLE
 
         // レイアウトイベント
-        subscription.add( layoutObservable
-                .subscribeOn(Schedulers.io())
-                .filter { contentText.isNotEmpty() }
-                .doOnNext {
-                    val (width,height) = it
-                    if ( layout.needReLayout(width, height, contentText) ) {
-                        layout.setColor(fontColor,bgColor)
-                        layout.needRelayoutFlag = false
-                        layout.density = density
-                        layout.scaledDensity = scaledDensity
-                        layout.writingPaperMode = writingPaperMode
-                        layout.setWritingPaperChars(writingPaperChars)
-                        layout.setFont( (fontSize * fontScales[fontScale]).toInt() , fontTypeface!! , fontIpamincho)
-                        layout.setSize(width, height)
-                        layout.setWrapPosition(wrapPosition)
-                        val measureTime = measureTimeMillis {
-                            val pageCount = layout.calcPages(contentText)
-                            viewPager.totalPage = pageCount - 1
-                        }
-                        if ( BuildConfig.DEBUG ){
-                            Log.d("======>", "time=${measureTime}ms len=${contentText.length}")
-                            Log.d("======>", "speed=${(measureTime.toFloat() * 1000F) / contentText.length} us/char")
+        layoutObservable.observe {
+            if ( contentText.isNotEmpty() ){
+                try {
+                    withContext(Dispatchers.IO) {
+                        val (width, height) = it
+                        if (layout.needReLayout(width, height, contentText)) {
+                            layout.setColor(fontColor, bgColor)
+                            layout.needRelayoutFlag = false
+                            layout.density = density
+                            layout.scaledDensity = scaledDensity
+                            layout.writingPaperMode = writingPaperMode
+                            layout.setWritingPaperChars(writingPaperChars)
+                            layout.setFont(
+                                (fontSize * fontScales[fontScale]).toInt(),
+                                fontTypeface!!,
+                                fontIpamincho
+                            )
+                            layout.setSize(width, height)
+                            layout.setWrapPosition(wrapPosition)
+                            val measureTime = measureTimeMillis {
+                                val pageCount = layout.calcPages(contentText)
+                                viewPager.totalPage = pageCount - 1
+                            }
+                            if (BuildConfig.DEBUG) {
+                                Log.d("======>", "time=${measureTime}ms len=${contentText.length}")
+                                Log.d(
+                                    "======>",
+                                    "speed=${(measureTime.toFloat() * 1000F) / contentText.length} us/char"
+                                )
+                            }
                         }
                     }
-                }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe( {
                     progressBar.visibility = View.GONE
                     currentPage = layout.getPageByPosition(position)
                     updatePageText()
                     viewPager.setCurrentItem(currentPage, false)
                     viewPager.adapter!!.notifyDataSetChanged()
-                },{it.printStackTrace()},{} ))
-
+                }
+                catch (e:Exception){
+                    e.printStackTrace()
+                }
+            }
+        }
         gestureDetector = GestureDetector(context, GestureListener())
         scaleGestureDetector = ScaleGestureDetector( context , ScaleGestureListener() )
     }
 
     internal fun updatePageText() {
         val pageCount = layout.pageCount
-        val text = if (pageCount < 0) currentPage.toString() + "" else currentPage.toString() + "/" + pageCount
+        val text = if (pageCount < 0) currentPage.toString() + "" else "$currentPage/$pageCount"
         pageNumText.text = text
     }
 
-    fun updatePageNum(showSeekBar: Boolean) {
+    private fun updatePageNum(@Suppress("SameParameterValue") showSeekBar: Boolean) {
         pagingBar.max = layout.pageCount
         pagingBar.progress = currentPage
         updatePageText()
@@ -276,7 +307,7 @@ class VTextLayout : RelativeLayout {
 
         val width = viewPager.width
         val height = viewPager.height
-        layoutObservable.onNext(width to height)
+        layoutObservable.emitInScope(width to height)
     }
 
     //フォント指定
@@ -326,8 +357,8 @@ class VTextLayout : RelativeLayout {
     fun reLayoutChildren() {
         setOnLayoutListener()
         measure(
-                View.MeasureSpec.makeMeasureSpec(measuredWidth, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(measuredHeight, View.MeasureSpec.EXACTLY))
+                MeasureSpec.makeMeasureSpec(measuredWidth, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(measuredHeight, MeasureSpec.EXACTLY))
         layout(left, top, right, bottom)
     }
 
@@ -345,14 +376,14 @@ class VTextLayout : RelativeLayout {
                 } else {
                     vtoo.removeGlobalOnLayoutListener(this)
                 }
-                layoutObservable.onNext(width to height)
+                layoutObservable.emitInScope(width to height)
             }
         })
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        subscription.unsubscribe()
+        scope.cancel()
         layout.clear()
     }
 
@@ -379,15 +410,16 @@ class VTextLayout : RelativeLayout {
 
     private inner class ScaleGestureListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
+        @Suppress("SpellCheckingInspection")
         override fun onScaleEnd(detector: ScaleGestureDetector?) {
             detector?.let{
                 val factor = it.scaleFactor
                 if ( layout.writingPaperMode ){
                     val lastWritingPaperChars = writingPaperChars
-                    if ( factor < 1.0F ){
-                        writingPaperChars = 40
+                    writingPaperChars = if ( factor < 1.0F ){
+                        40
                     }else{
-                        writingPaperChars = 20
+                        20
                     }
                     val vtextview = viewPager.findViewWithTag<VTextView>(viewPager.currentItem)
                     if ( vtextview is VTextView && lastWritingPaperChars != writingPaperChars ) {
@@ -399,7 +431,7 @@ class VTextLayout : RelativeLayout {
                         layout.needRelayoutFlag = true
                         val width = viewPager.width
                         val height = viewPager.height
-                        layoutObservable.onNext(width to height)
+                        layoutObservable.emitInScope(width to height)
                     }
                 }else{
                     val lastFontScale = fontScale
@@ -420,7 +452,7 @@ class VTextLayout : RelativeLayout {
                         layout.needRelayoutFlag = true
                         val width = viewPager.width
                         val height = viewPager.height
-                        layoutObservable.onNext(width to height)
+                        layoutObservable.emitInScope(width to height)
                     }
                 }
             }
@@ -439,7 +471,7 @@ class VTextLayout : RelativeLayout {
                     viewPager.setCurrentItem(current-1,true)
                 }
             }
-            return true;
+            return true
         }
         if ( keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ||
                 keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
@@ -450,7 +482,7 @@ class VTextLayout : RelativeLayout {
                     viewPager.setCurrentItem(current + 1, true)
                 }
             }
-            return true;
+            return true
         }
         return super.dispatchKeyEvent(event)
     }

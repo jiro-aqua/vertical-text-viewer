@@ -3,10 +3,14 @@
     <array name="vtext_font_kind">
         <item>@string/vtext_font_kind_mincho</item>
         <item>@string/vtext_font_kind_gothic</item>
+        <item>@string/vtext_font_kind_morisawa_mincho</item>
+        <item>@string/vtext_font_kind_morisawa_gothic</item>
     </array>
     <array name="vtext_font_kind_value">
         <item>mincho</item>
         <item>gothic</item>
+        <item>morisawa_mincho</item>
+        <item>morisawa_gothic</item>
     </array>
 
     <string-array name="vtext_font_size">

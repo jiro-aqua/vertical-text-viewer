@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="jp.gr.aqua.vtextviewer.app"
-    >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <permission android:name="jp.sblo.pandora.jota.VTEXTVIEWER"
         android:label="@string/vtext_permission_name"
         android:description="@string/vtext_permission_description"
