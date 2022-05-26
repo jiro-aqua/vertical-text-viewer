@@ -18,6 +18,8 @@ class Preferences(context: Context){
         const val KEY_ABOUT_MORISAWA_GOTHIC="about_morisawa_gothic"
         const val KEY_WRITING_PAPER="writing_paper"
         const val KEY_BACKGROUND_BLACK="background_black"
+        const val KEY_YOKOGAKI="yokogaki"
+        const val KEY_USE_DARK_MODE="use_dark_mode"
     }
 
     private val sp : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -51,6 +53,16 @@ class Preferences(context: Context){
     fun isBackgroundBlack() : Boolean
     {
         return sp.getBoolean(KEY_BACKGROUND_BLACK,false)
+    }
+
+    fun isYokogaki() : Boolean
+    {
+        return sp.getBoolean(KEY_YOKOGAKI,false)
+    }
+
+    fun isUseDarkMode() : Boolean
+    {
+        return sp.getBoolean(KEY_USE_DARK_MODE,false)
     }
 
     private fun String.toIntSafety() : Int = if ( this.isEmpty() ) 0 else this.toInt()

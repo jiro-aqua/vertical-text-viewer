@@ -5,10 +5,10 @@ android {
 
     defaultConfig {
         applicationId "jp.gr.aqua.jota.vtextviewer"
-        minSdkVersion 15
+        minSdkVersion 23
         targetSdkVersion 32
-        versionCode 14
-        versionName "1.14"
+        versionCode 17
+        versionName "1.17"
     }
     buildTypes {
         release {
@@ -19,6 +19,9 @@ android {
     compileOptions {
         sourceCompatibility 1.8
         targetCompatibility 1.8
+    }
+    buildFeatures {
+        viewBinding true
     }
     namespace 'jp.gr.aqua.vtextviewer.app'
 }

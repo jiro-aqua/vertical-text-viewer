@@ -38,4 +38,10 @@
     <string name="vtext_background_black">黒背景を使う</string>
     <string name="vtext_background_black_summary">黒地に白で描画します</string>
 
+    <string name="vtext_use_dark_mode">ダークモードを使う</string>
+    <string name="vtext_use_dark_mode_summary">文字色/背景色をOSのダークモードの設定に従い設定します</string>
+
+    <string name="vtext_yokogaki">横書きモード</string>
+    <string name="vtext_yokogaki_summary">Webでの横書きルビ形式でプレビューします</string>
+
 </resources>

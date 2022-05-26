@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width">
+	<style type="text/css">
+:root {
+	color-scheme : light dark;
+}
+
+@font-face {
+    font-family: "myFont";
+      src: url('/!!!FONTFACE!!!') format('truetype');
+    }
+
+body{
+	overflow-x: hidden;
+    font-family: "myFont";
+    font-size: !!!FONTSIZE!!!px;
+    line-height: 1.5em;
+}
+
+a {
+    text-decoration:none;
+}
+
+@media only screen and (min-width: 360px){
+	body{
+		width: 320px;
+		margin-left: auto;
+	    margin-right: auto;
+	}
+	</style>
+</head>
+<body>
+
+<h3>!!!TEMPLATE-H1!!!</h3>
+
+!!!BODY!!!
+
+</body>
+</html>
+
+

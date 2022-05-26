@@ -20,6 +20,7 @@ import jp.gr.aqua.vtextviewer.BuildConfig
 import jp.gr.aqua.vtextviewer.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlin.properties.Delegates
@@ -82,7 +83,7 @@ class VTextLayout : RelativeLayout {
     }
 
     // scope内でcollectする
-    private fun <T> Flow<T>.observe(block: suspend (T) -> Unit) {
+    private fun <T> Flow<T>.observe(block: FlowCollector<T>) {
         scope.launch {
             collect(block)
         }

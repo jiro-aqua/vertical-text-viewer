@@ -3,6 +3,7 @@ package jp.gr.aqua.vtextviewer
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.preference.*
 
@@ -32,6 +33,10 @@ class PreferenceFragment : PreferenceFragmentCompat() {
                 ?.setOnPreferenceChangeListener { _, newValue -> if ( newValue is Boolean ) writingPaperModeEnabler(newValue)
                     true
                 }
+
+        // ダークモードを使う
+        ps.findPreference<Preference>(Preferences.KEY_USE_DARK_MODE)?.isEnabled=
+            ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q )
 
         // IPAフォントについて
         ps.findPreference<Preference>(Preferences.KEY_IPA)

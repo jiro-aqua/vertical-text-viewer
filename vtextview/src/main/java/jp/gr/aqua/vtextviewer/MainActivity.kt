@@ -5,12 +5,21 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import jp.gr.aqua.vjap.VTextLayout
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewAssetLoader
+import androidx.webkit.WebViewFeature
+import jp.gr.aqua.vtextviewer.databinding.ActivityHtextBinding
+import jp.gr.aqua.vtextviewer.databinding.ActivityVtextMainBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,35 +32,79 @@ class MainActivity : AppCompatActivity() {
         private const val EXTRA_POINTED = "EXTRA_POINTED"
 
         private const val WRITING_PAPER_CHARS = 20
+
+        private const val HTML_NAME = "preview.html"
+        private const val HTML_PATH = "preview_html"
+
+        private const val FONT_IPAM =  "ipam.ttf"
+        private const val FONT_IPAG =  "ipag.ttf"
+        private const val FONT_BIZM =  "BIZUDMincho-Regular.ttf"
+        private const val FONT_BIZG =  "BIZUDGothic-Regular.ttf"
+
+        private val FONTS = listOf(FONT_IPAG,FONT_IPAM, FONT_BIZG, FONT_BIZM)
     }
-    private val vTextLayout by lazy { findViewById(R.id.vTextLayout) as VTextLayout }
+
+    private val htmlDir by lazy { File(filesDir, HTML_PATH) }
+    private val previewFile by lazy { File(htmlDir, HTML_NAME) }
+
+    private lateinit var vBinding : ActivityVtextMainBinding
+    private lateinit var hBinding : ActivityHtextBinding
+
+    private var tategakiMode : Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_vtext_main)
+
+        copyFonts()
+
+        val pr = Preferences(this)
+
+        tategakiMode = !pr.isYokogaki()
+
+        if (tategakiMode) {
+            vBinding = ActivityVtextMainBinding.inflate(layoutInflater)
+            setContentView(vBinding.root)
+        } else {
+            hBinding = ActivityHtextBinding.inflate(layoutInflater)
+            setContentView(hBinding.root)
+        }
 
         val position = savedInstanceState?.getInt(KEY_POSITION) ?: 0
 
         // 設定読込
-        val pr = Preferences(this)
         val fontKind = pr.getFontKind()
-        val fontSet = when ( fontKind ) {
-            "mincho" -> "ipam.ttf" to true
-            "morisawa_mincho" -> "BIZUDMincho-Regular.ttf" to true
-            "morisawa_gothic" -> "BIZUDGothic-Regular.ttf" to false
-            else /*"gothic"*/ -> "ipag.ttf" to false
+        val fontSet = when (fontKind) {
+            "mincho" -> FONT_IPAM to true
+            "morisawa_mincho" -> FONT_BIZM to true
+            "morisawa_gothic" -> FONT_BIZG to false
+            else /*"gothic"*/ -> FONT_IPAG to false
         }
         val fontSize = pr.getFontSize()
-        val charMax = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            // 縦向きの場合
-            pr.getCharMaxPort()
-        }else{
-            // 横向きの場合
-            pr.getCharMaxLand()
-        }
+        val charMax =
+            if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                // 縦向きの場合
+                pr.getCharMaxPort()
+            } else {
+                // 横向きの場合
+                pr.getCharMaxLand()
+            }
         val writingPaperMode = pr.isWritingPaperMode()
 
-        val (fontColor,bgColor) =  if ( pr.isBackgroundBlack() ){
+        val useDarkMode = pr.isUseDarkMode()
+        var useBlack = false
+
+        if (useDarkMode) {
+            val currentNightMode =
+                resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+            when (currentNightMode) {
+                Configuration.UI_MODE_NIGHT_NO -> { useBlack = false }
+                Configuration.UI_MODE_NIGHT_YES -> {  useBlack = true }
+            }
+        }else{
+            useBlack = pr.isBackgroundBlack()
+        }
+
+        val (fontColor,bgColor) =  if ( useBlack ){
             // 黒背景
             @Suppress("DEPRECATION")
             resources.getColor(R.color.vtext_color_dkgray) to resources.getColor(R.color.vtext_color_black)
@@ -66,16 +119,62 @@ class MainActivity : AppCompatActivity() {
             val end = intent.getIntExtra(EXTRA_END,0)
 
             val uri = intent.data
-            vTextLayout.apply {
-                setText("")
-                setColor(fontColor,bgColor)
-                setInitialPosition(position)
-                setWritingPaperMode(writingPaperMode)
-                setWritingPaperChars(WRITING_PAPER_CHARS)
-                setFont((fontSize * resources.getDimension(R.dimen.vtext_font_size_unit)).toInt(),
+
+            if ( tategakiMode ){
+                vBinding.vTextLayout.apply {
+                    setText("")
+                    setColor(fontColor,bgColor)
+                    setInitialPosition(position)
+                    setWritingPaperMode(writingPaperMode)
+                    setWritingPaperChars(WRITING_PAPER_CHARS)
+                    setFont((fontSize * resources.getDimension(R.dimen.vtext_font_size_unit)).toInt(),
                         Typeface.createFromAsset(assets, fontSet.first), fontSet.second)
-                setPadding(resources.getDimension(R.dimen.vtext_padding).toInt())
-                setWrapPosition(charMax)
+                    setPadding(resources.getDimension(R.dimen.vtext_padding).toInt())
+                    setWrapPosition(charMax)
+                }
+            }else{
+                val assetLoader = WebViewAssetLoader.Builder()
+                    .setDomain("www.aqua.gr.jp")
+//                    .addPathHandler("/asset/", WebViewAssetLoader.AssetsPathHandler(this))
+                    .addPathHandler("/", WebViewAssetLoader.InternalStoragePathHandler(this, htmlDir))
+                    .build()
+
+                val client = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        if ( url?.contains('#') != true ) {
+                            hBinding.webview.visibility = View.VISIBLE
+                            hBinding.progressbar.visibility = View.GONE
+                            hBinding.webview.loadUrl("https://www.aqua.gr.jp/$HTML_NAME#pos")
+                        }
+                    }
+
+                    override fun shouldOverrideUrlLoading(view: WebView?, _url: String?): Boolean {
+                        handleUrl(_url)
+                        return true
+                    }
+
+                    override fun shouldInterceptRequest(
+                        view: WebView?,
+                        request: WebResourceRequest
+                    ): WebResourceResponse? {
+                        return assetLoader.shouldInterceptRequest(request.url)
+                    }
+
+                }
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+                    if ( useBlack ) {
+                        WebSettingsCompat.setForceDark(
+                            hBinding.webview.settings,
+                            WebSettingsCompat.FORCE_DARK_ON
+                        )
+                    }else{
+                        WebSettingsCompat.setForceDark(
+                            hBinding.webview.settings,
+                            WebSettingsCompat.FORCE_DARK_OFF
+                        )
+                    }
+                }
+                hBinding.webview.webViewClient = client
             }
 
             lifecycleScope.launch {
@@ -84,12 +183,28 @@ class MainActivity : AppCompatActivity() {
                         loadContent(uri!!)
                     }
                     text.let {
-                        vTextLayout.apply{
-                            setText(it)
-                            if ( position == 0 ){
-                                setInitialPosition((start+end)/2)
+                        if (tategakiMode) {
+                            vBinding.vTextLayout.apply {
+                                setText(it)
+                                if (position == 0) {
+                                    setInitialPosition((start + end) / 2)
+                                }
+                                reLayoutChildren()
                             }
-                            reLayoutChildren()
+                        } else {
+                            val htmlFile = File(htmlDir, HTML_NAME)
+                            withContext(Dispatchers.IO) {
+                                val html = RubyToHtmlConverter(this@MainActivity)
+                                    .toHtml(
+                                        text = it,
+                                        fontface = fontSet.first,
+                                        fontsize = fontSize,
+                                        start = start,
+                                    )
+                                htmlFile.writeText(html, charset = Charsets.UTF_8)
+                            }
+                            val url = "https://www.aqua.gr.jp/$HTML_NAME"
+                            hBinding.webview.loadUrl(url)
                         }
                     }
                 }
@@ -102,48 +217,77 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // 文字をダブルクリックされたら、その文字のカーソル位置を持って終了
-        vTextLayout.setOnDoubleClickListener {
-            pointed->
-            val intent = intent.apply{
-                val pos = vTextLayout.getCurrentStartPosition()
-                putExtra(EXTRA_START,pos)
-                putExtra(EXTRA_END,pos)
-                putExtra(EXTRA_POINTED,pointed)
+        if ( tategakiMode ){
+            // 文字をダブルクリックされたら、その文字のカーソル位置を持って終了
+            vBinding.vTextLayout.setOnDoubleClickListener {
+                    pointed->
+                val intent = intent.apply{
+                    val pos = vBinding.vTextLayout.getCurrentStartPosition()
+                    putExtra(EXTRA_START,pos)
+                    putExtra(EXTRA_END,pos)
+                    putExtra(EXTRA_POINTED,pointed)
+                }
+                setResult(Activity.RESULT_OK,intent)
+                finish()
             }
-            setResult(Activity.RESULT_OK,intent)
-            finish()
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.apply{
-            putInt(KEY_POSITION, vTextLayout.getCurrentPosition())
+            if ( tategakiMode ) {
+                putInt(KEY_POSITION, vBinding.vTextLayout.getCurrentPosition())
+            }
         }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         savedInstanceState.apply{
-            vTextLayout.setInitialPosition(getInt(KEY_POSITION))
+            if ( tategakiMode ) {
+                vBinding.vTextLayout.setInitialPosition(getInt(KEY_POSITION))
+            }
         }
     }
 
     @Throws(Exception::class)
     private fun loadContent(uri: Uri): String {
-        return contentResolver.openInputStream(uri)?.bufferedReader(charset = Charsets.UTF_8).use { it!!.readText() }
+        return contentResolver.openInputStream(uri)?.reader(charset = Charsets.UTF_8).use { it!!.readText() }
     }
 
     override fun onBackPressed() {
-        val intent = intent.apply{
-            val position = vTextLayout.getCurrentStartPosition()
-            putExtra(EXTRA_START,position)
-            putExtra(EXTRA_END,position)
+        if ( tategakiMode ){
+            val intent = intent.apply{
+                val position = vBinding.vTextLayout.getCurrentStartPosition()
+                putExtra(EXTRA_START,position)
+                putExtra(EXTRA_END,position)
+            }
+            setResult(Activity.RESULT_OK,intent)
         }
-        setResult(Activity.RESULT_OK,intent)
         super.onBackPressed()
     }
 
+    private fun handleUrl(url:String?) {
+        RubyToHtmlConverter.handleUrl(url)?.let{
+            // 編集ボタンを押されたら、その行の番号を持って終了
+            val intent = intent.apply {
+                putExtra(EXTRA_START,it)
+                putExtra(EXTRA_END,it)
+                putExtra(EXTRA_POINTED,it)
+            }
+            setResult(Activity.RESULT_OK, intent)
+            finish()
+        }
+    }
+
+    private fun copyFonts(){
+        htmlDir.mkdirs()
+        FONTS.forEach {
+            if ( !File(htmlDir,it).exists() ){
+                assets.open(it).copyTo(File(htmlDir,it).outputStream())
+            }
+        }
+    }
 
 }

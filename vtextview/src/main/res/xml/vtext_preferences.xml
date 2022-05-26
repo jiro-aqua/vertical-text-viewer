@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="@string/vtext_category_settings">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:title="@string/vtext_category_settings"
+        app:iconSpaceReserved="false"
+        >
+        <SwitchPreferenceCompat
+            android:key="yokogaki"
+            android:title="@string/vtext_yokogaki"
+            android:summary="@string/vtext_yokogaki_summary"
+            android:defaultValue="false"
+            android:disableDependentsState="true"
+            app:iconSpaceReserved="false"
+            />
+
+        <SwitchPreferenceCompat
+            android:key="use_dark_mode"
+            android:title="@string/vtext_use_dark_mode"
+            android:summary="@string/vtext_use_dark_mode_summary"
+            android:defaultValue="false"
+            android:disableDependentsState="true"
+            app:iconSpaceReserved="false"
+            />
 
         <SwitchPreferenceCompat
             android:key="background_black"
             android:title="@string/vtext_background_black"
             android:summary="@string/vtext_background_black_summary"
             android:defaultValue="false"
+            android:dependency="use_dark_mode"
+            app:iconSpaceReserved="false"
             />
 
         <SwitchPreferenceCompat
@@ -14,6 +37,8 @@
             android:title="@string/vtext_writing_paper"
             android:summary="@string/vtext_writing_paper_summary"
             android:defaultValue="false"
+            android:dependency="yokogaki"
+            app:iconSpaceReserved="false"
             />
 
         <ListPreference
@@ -22,6 +47,7 @@
             android:entries="@array/vtext_font_kind"
             android:entryValues="@array/vtext_font_kind_value"
             android:defaultValue="mincho"
+            app:iconSpaceReserved="false"
             />
 
         <ListPreference
@@ -30,6 +56,7 @@
             android:entries="@array/vtext_font_size"
             android:entryValues="@array/vtext_font_size_value"
             android:defaultValue="16"
+            app:iconSpaceReserved="false"
             />
 
         <EditTextPreference
@@ -38,6 +65,8 @@
             android:summary="@string/vtext_char_max_summary"
             android:defaultValue="0"
             android:dialogLayout="@layout/preference_vtext_charmax"
+            android:dependency="yokogaki"
+            app:iconSpaceReserved="false"
             />
 
         <EditTextPreference
@@ -46,30 +75,41 @@
             android:summary="@string/vtext_char_max_summary"
             android:defaultValue="0"
             android:dialogLayout="@layout/preference_vtext_charmax"
+            android:dependency="yokogaki"
+            app:iconSpaceReserved="false"
             />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/vtext_category_information">
+    <PreferenceCategory android:title="@string/vtext_category_information"
+        app:iconSpaceReserved="false"
+        >
         <Preference
             android:key="about_ipa"
             android:title="@string/vtext_about_ipa_font"
-            android:summary="@string/vtext_ipa_license">
+            android:summary="@string/vtext_ipa_license"
+            app:iconSpaceReserved="false"
+            >
         </Preference>
 
         <Preference
             android:key="about_morisawa_mincho"
             android:title="@string/vtext_about_morisawa_mincho"
-            android:summary="@string/vtext_open_font_license">
+            android:summary="@string/vtext_open_font_license"
+            app:iconSpaceReserved="false"
+            >
         </Preference>
 
         <Preference
             android:key="about_morisawa_gothic"
             android:title="@string/vtext_about_morisawa_gothic"
-            android:summary="@string/vtext_open_font_license">
+            android:summary="@string/vtext_open_font_license"
+            app:iconSpaceReserved="false"
+            >
         </Preference>
 
         <Preference
             android:key="app_about"
             android:title="@string/vtext_app_about"
+            app:iconSpaceReserved="false"
             >
         </Preference>
     </PreferenceCategory>
