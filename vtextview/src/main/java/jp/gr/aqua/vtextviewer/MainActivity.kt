@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewFeature
+import com.google.android.play.core.review.ReviewManagerFactory
 import jp.gr.aqua.vtextviewer.databinding.ActivityHtextBinding
 import jp.gr.aqua.vtextviewer.databinding.ActivityVtextMainBinding
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private var tategakiMode : Boolean = true
 
     private val pr by lazy { Preferences(this) }
+    private val flags by lazy { Flags(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -207,6 +209,9 @@ class MainActivity : AppCompatActivity() {
                             val url = "https://www.aqua.gr.jp/$HTML_NAME"
                             hBinding.webview.loadUrl(url)
                         }
+                        if ( text.length > 3000 ){
+                            flags.usageCounter = flags.usageCounter + 1     // 3000文字以上あれば正規ユーザーなので、カウンタをアップ
+                        }
                     }
                 }
                 catch (e:Exception){
@@ -241,7 +246,7 @@ class MainActivity : AppCompatActivity() {
 
         pr.addChangedListener(preferenceChangedListner)
 
-        if ( !pr.isNewsRead ){
+        if ( !flags.isNewsRead ){
             lifecycleScope.launch {
                 val message = withContext(Dispatchers.IO){
                     assets.open("news_202206.txt").reader(charset = Charsets.UTF_8).readText()
@@ -251,11 +256,34 @@ class MainActivity : AppCompatActivity() {
                     .setMessage(message)
                     .setCancelable(false)
                     .setPositiveButton(R.string.vtext_ok){ _,_ ->
-                        pr.isNewsRead = true
+                        flags.isNewsRead = true
                     }
                     .show()
             }
         }
+
+        if ( flags.usageCounter > 19 && (flags.usageCounter.mod(10L)) == 0L){        // よく使うユーザーであればレビューリクエスト
+            val manager = ReviewManagerFactory.create(this)
+            val request = manager.requestReviewFlow()
+            request.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // We got the ReviewInfo object
+                    val reviewInfo = task.result
+                    if ( reviewInfo != null) {
+                        val flow = manager.launchReviewFlow(this, reviewInfo)
+                        flow.addOnCompleteListener { _ ->
+                            // The flow has finished. The API does not indicate whether the user
+                            // reviewed or not, or even whether the review dialog was shown. Thus, no
+                            // matter the result, we continue our app flow.
+                        }
+                    }
+                } else {
+                    // There was some problem, log or handle the error code.
+                    task.exception?.printStackTrace()
+                }
+            }
+        }
+
     }
 
     override fun onDestroy() {
@@ -283,7 +311,7 @@ class MainActivity : AppCompatActivity() {
 
     @Throws(Exception::class)
     private fun loadContent(uri: Uri): String {
-        return contentResolver.openInputStream(uri)?.reader(charset = Charsets.UTF_8).use { it!!.readText() }
+        return contentResolver.openInputStream(uri)?.reader(charset = Charsets.UTF_8)?.readText() ?: ""
     }
 
     override fun onBackPressed() {

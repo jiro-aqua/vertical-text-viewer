@@ -20,7 +20,6 @@ class Preferences(context: Context){
         const val KEY_BACKGROUND_BLACK="background_black"
         const val KEY_YOKOGAKI="yokogaki"
         const val KEY_USE_DARK_MODE="use_dark_mode"
-        const val KEY_IS_NEWS_READ="is_news_read_202206"
     }
 
     private val sp : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -84,9 +83,5 @@ class Preferences(context: Context){
     fun removeChangedListener(listener:()->Unit){
         listeners.remove(listener)
     }
-
-    var isNewsRead : Boolean
-        get() = sp.getBoolean(KEY_IS_NEWS_READ,false)
-        set(value) = sp.edit().putBoolean(KEY_IS_NEWS_READ,value).apply()
 
 }
