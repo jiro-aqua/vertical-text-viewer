@@ -1,13 +1,15 @@
 package jp.gr.aqua.vtextviewer
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.webkit.*
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebSettingsCompat
@@ -16,7 +18,6 @@ import androidx.webkit.WebViewFeature
 import jp.gr.aqua.vtextviewer.databinding.ActivityHtextBinding
 import jp.gr.aqua.vtextviewer.databinding.ActivityVtextMainBinding
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -52,12 +53,12 @@ class MainActivity : AppCompatActivity() {
 
     private var tategakiMode : Boolean = true
 
+    private val pr by lazy { Preferences(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         copyFonts()
-
-        val pr = Preferences(this)
 
         tategakiMode = !pr.isYokogaki()
 
@@ -231,6 +232,35 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
         }
+
+        val settings = findViewById<ImageView>(R.id.settings)
+        settings?.setOnClickListener {
+            val intent = Intent(this,PreferenceActivity::class.java)
+            startActivity(intent)
+        }
+
+        pr.addChangedListener(preferenceChangedListner)
+
+        if ( !pr.isNewsRead ){
+            lifecycleScope.launch {
+                val message = withContext(Dispatchers.IO){
+                    assets.open("news_202206.txt").reader(charset = Charsets.UTF_8).readText()
+                }
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle(R.string.vtext_app_name)
+                    .setMessage(message)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.vtext_ok){ _,_ ->
+                        pr.isNewsRead = true
+                    }
+                    .show()
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pr.removeChangedListener(preferenceChangedListner)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -290,4 +320,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val preferenceChangedListner = { // Preferenceが変更されたらfinish()
+        finish()
+    }
 }

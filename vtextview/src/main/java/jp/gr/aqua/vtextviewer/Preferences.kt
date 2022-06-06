@@ -20,9 +20,19 @@ class Preferences(context: Context){
         const val KEY_BACKGROUND_BLACK="background_black"
         const val KEY_YOKOGAKI="yokogaki"
         const val KEY_USE_DARK_MODE="use_dark_mode"
+        const val KEY_IS_NEWS_READ="is_news_read_202206"
     }
 
     private val sp : SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val listeners = ArrayList<(()->Unit)>()
+
+    init {
+        sp.registerOnSharedPreferenceChangeListener { _, _ ->
+            listeners.forEach {
+                it()
+            }
+        }
+    }
 
     fun getFontKind() : String
     {
@@ -66,5 +76,17 @@ class Preferences(context: Context){
     }
 
     private fun String.toIntSafety() : Int = if ( this.isEmpty() ) 0 else this.toInt()
+
+    fun addChangedListener(listener:()->Unit){
+        listeners.add(listener)
+    }
+
+    fun removeChangedListener(listener:()->Unit){
+        listeners.remove(listener)
+    }
+
+    var isNewsRead : Boolean
+        get() = sp.getBoolean(KEY_IS_NEWS_READ,false)
+        set(value) = sp.edit().putBoolean(KEY_IS_NEWS_READ,value).apply()
 
 }
