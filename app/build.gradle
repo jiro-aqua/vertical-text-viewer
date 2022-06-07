@@ -7,8 +7,8 @@ android {
         applicationId "jp.gr.aqua.jota.vtextviewer"
         minSdkVersion 23
         targetSdkVersion 32
-        versionCode 17
-        versionName "1.17"
+        versionCode 18
+        versionName "1.18"
     }
     buildTypes {
         release {
@@ -20,12 +20,12 @@ android {
         sourceCompatibility 1.8
         targetCompatibility 1.8
     }
-    buildFeatures {
-        viewBinding true
-    }
-    namespace 'jp.gr.aqua.vtextviewer.app'
+    namespace 'jp.gr.aqua.vtextviewerapp'
+
 }
 
 dependencies {
     implementation project(':vtextview')
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+
 }
