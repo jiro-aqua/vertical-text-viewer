@@ -412,8 +412,8 @@ class VTextLayout : RelativeLayout {
     private inner class ScaleGestureListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
         @Suppress("SpellCheckingInspection")
-        override fun onScaleEnd(detector: ScaleGestureDetector?) {
-            detector?.let{
+        override fun onScaleEnd(detector: ScaleGestureDetector) {
+            detector.let{
                 val factor = it.scaleFactor
                 if ( layout.writingPaperMode ){
                     val lastWritingPaperChars = writingPaperChars
