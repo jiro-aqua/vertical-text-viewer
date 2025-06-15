@@ -1,10 +1,19 @@
-package jp.gr.aqua.vtextviewer
+package jp.gr.aqua.vtextviewerapp
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import jp.gr.aqua.vtextviewer.databinding.ActivityLauncherBinding
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import jp.gr.aqua.vtextviewer.PreferenceActivity
+import jp.gr.aqua.vtextviewerapp.databinding.ActivityLauncherBinding
+import kotlin.math.max
 
 
 class LaunchActivity : AppCompatActivity() {
@@ -22,6 +31,25 @@ class LaunchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLauncherBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // edge-to-edge を維持
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT,Color.TRANSPARENT,),        // 通知バーの文字を常に黒で描画する
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT,Color.TRANSPARENT,),
+        )
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val rootView = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val sys = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or
+                        WindowInsetsCompat.Type.displayCutout()
+            )
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+
+            val bottom = max(sys.bottom, ime.bottom)
+            v.setPadding(sys.left, sys.top, sys.right, bottom)   // ← コンテンツだけ避ける
+            WindowInsetsCompat.CONSUMED
+        }
 
         binding.openJota.setOnClickListener {
             openJota(JOTA_PACKAGE)

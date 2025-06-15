@@ -4,13 +4,18 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.webkit.*
 import android.widget.ImageView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewAssetLoader
@@ -22,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.math.max
 
 class MainActivity : AppCompatActivity() {
 
@@ -59,6 +65,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // edge-to-edge を維持
+        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val rootView = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val sys = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or
+                        WindowInsetsCompat.Type.displayCutout()
+            )
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+
+            val bottom = max(sys.bottom, ime.bottom)
+            v.setPadding(sys.left, sys.top, sys.right, bottom)   // ← コンテンツだけ避ける
+            WindowInsetsCompat.CONSUMED
+        }
 
         copyFonts()
 
@@ -116,6 +138,8 @@ class MainActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             resources.getColor(R.color.vtext_color_black) to resources.getColor(R.color.vtext_color_white)
         }
+
+        window.decorView.setBackgroundColor(bgColor)
 
         if(intent.action == intentAction ){
             val start = intent.getIntExtra(EXTRA_START,0)
@@ -246,7 +270,7 @@ class MainActivity : AppCompatActivity() {
 
         pr.addChangedListener(preferenceChangedListner)
 
-        if ( !flags.isNewsRead ){
+        if ( flags.isStandalone && !flags.isNewsRead ){
             lifecycleScope.launch {
                 val message = withContext(Dispatchers.IO){
                     assets.open("news_202206.txt").reader(charset = Charsets.UTF_8).readText()
@@ -262,7 +286,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if ( flags.usageCounter > 19 && (flags.usageCounter.mod(10L)) == 0L){        // よく使うユーザーであればレビューリクエスト
+        if ( flags.isStandalone && flags.usageCounter > 19 && (flags.usageCounter.mod(10L)) == 0L){        // よく使うユーザーであればレビューリクエスト
             val manager = ReviewManagerFactory.create(this)
             val request = manager.requestReviewFlow()
             request.addOnCompleteListener { task ->

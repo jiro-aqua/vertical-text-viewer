@@ -62,7 +62,7 @@ class PreferenceFragment : PreferenceFragmentCompat() {
         var versionName = ""
         try {
             val packageInfo = pm.getPackageInfo(requireActivity().packageName, 0)
-            versionName = packageInfo.versionName
+            versionName = packageInfo.versionName ?: ""
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
         }

@@ -6,9 +6,9 @@ import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.widget.SeekBar
+import androidx.appcompat.widget.AppCompatSeekBar
 
-class ReversedSeekBar(context: Context, attrs: AttributeSet) : SeekBar(context, attrs) {
+class ReversedSeekBar(context: Context, attrs: AttributeSet) : AppCompatSeekBar(context, attrs) {
 
     override fun onDraw(c: Canvas) {
         val px = this.width / 2.0f

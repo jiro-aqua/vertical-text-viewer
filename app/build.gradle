@@ -1,14 +1,15 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "jp.gr.aqua.jota.vtextviewer"
         minSdkVersion 23
-        targetSdkVersion 33
-        versionCode 19
-        versionName "1.19"
+        targetSdkVersion 36
+        versionCode 20
+        versionName "1.20"
     }
     buildTypes {
         release {
@@ -17,15 +18,21 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility 1.17
+        targetCompatibility 1.17
     }
-    namespace 'jp.gr.aqua.vtextviewerapp'
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 
+    namespace 'jp.gr.aqua.vtextviewerapp'
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
     implementation project(':vtextview')
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
 
 }

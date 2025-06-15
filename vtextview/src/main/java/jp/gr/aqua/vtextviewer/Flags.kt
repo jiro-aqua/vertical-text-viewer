@@ -14,6 +14,8 @@ class Flags(context: Context){
 
     private val sp : SharedPreferences = context.getSharedPreferences(PREF_FILE,Context.MODE_PRIVATE)
 
+    val isStandalone = context.packageName == "jp.gr.aqua.jota.vtextviewer"
+
     var isNewsRead : Boolean
         get() = sp.getBoolean(KEY_IS_NEWS_READ,false)
         set(value) = sp.edit().putBoolean(KEY_IS_NEWS_READ,value).apply()
