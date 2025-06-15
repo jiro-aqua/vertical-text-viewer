@@ -24,13 +24,9 @@ class PreferenceActivity : AppCompatActivity(), PreferenceFragment.OnFragmentInt
                 WindowInsetsCompat.Type.systemBars() or
                         WindowInsetsCompat.Type.displayCutout()
             )
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-
-            val bottom = max(sys.bottom, ime.bottom)
-            v.setPadding(sys.left, sys.top, sys.right, bottom)   // ← コンテンツだけ避ける
+            v.setPadding(sys.left, sys.top, sys.right, sys.bottom)   // ← コンテンツだけ避ける
             WindowInsetsCompat.CONSUMED
         }
-
 
         setContentView(R.layout.activity_vtext_preference)
         setTitle(R.string.vtext_app_name)

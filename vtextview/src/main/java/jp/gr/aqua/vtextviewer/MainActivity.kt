@@ -12,6 +12,7 @@ import android.view.View
 import android.webkit.*
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -75,10 +76,7 @@ class MainActivity : AppCompatActivity() {
                 WindowInsetsCompat.Type.systemBars() or
                         WindowInsetsCompat.Type.displayCutout()
             )
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-
-            val bottom = max(sys.bottom, ime.bottom)
-            v.setPadding(sys.left, sys.top, sys.right, bottom)   // ← コンテンツだけ避ける
+            v.setPadding(sys.left, sys.top, sys.right, sys.bottom)   // ← コンテンツだけ避ける
             WindowInsetsCompat.CONSUMED
         }
 
@@ -93,6 +91,8 @@ class MainActivity : AppCompatActivity() {
             hBinding = ActivityHtextBinding.inflate(layoutInflater)
             setContentView(hBinding.root)
         }
+
+        setupBackPressedHandler()
 
         val position = savedInstanceState?.getInt(KEY_POSITION) ?: 0
 
@@ -131,12 +131,10 @@ class MainActivity : AppCompatActivity() {
 
         val (fontColor,bgColor) =  if ( useBlack ){
             // 黒背景
-            @Suppress("DEPRECATION")
-            resources.getColor(R.color.vtext_color_dkgray) to resources.getColor(R.color.vtext_color_black)
+            resources.getColor(R.color.vtext_color_dkgray, theme) to resources.getColor(R.color.vtext_color_black, theme)
         }else{
             // 白背景
-            @Suppress("DEPRECATION")
-            resources.getColor(R.color.vtext_color_black) to resources.getColor(R.color.vtext_color_white)
+            resources.getColor(R.color.vtext_color_black, theme) to resources.getColor(R.color.vtext_color_white, theme)
         }
 
         window.decorView.setBackgroundColor(bgColor)
@@ -175,8 +173,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    override fun shouldOverrideUrlLoading(view: WebView?, _url: String?): Boolean {
-                        handleUrl(_url)
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest): Boolean {
+                        handleUrl(request.url.toString())
                         return true
                     }
 
@@ -338,16 +336,21 @@ class MainActivity : AppCompatActivity() {
         return contentResolver.openInputStream(uri)?.reader(charset = Charsets.UTF_8)?.readText() ?: ""
     }
 
-    override fun onBackPressed() {
-        if ( tategakiMode ){
-            val intent = intent.apply{
-                val position = vBinding.vTextLayout.getCurrentStartPosition()
-                putExtra(EXTRA_START,position)
-                putExtra(EXTRA_END,position)
+    private fun setupBackPressedHandler() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (tategakiMode) {
+                    val intent = intent.apply {
+                        val position = vBinding.vTextLayout.getCurrentStartPosition()
+                        putExtra(EXTRA_START, position)
+                        putExtra(EXTRA_END, position)
+                    }
+                    setResult(Activity.RESULT_OK, intent)
+                    remove() // コールバックを解除して...
+                    onBackPressedDispatcher.onBackPressed() // OSに任せる
+                }
             }
-            setResult(Activity.RESULT_OK,intent)
-        }
-        super.onBackPressed()
+        })
     }
 
     private fun handleUrl(url:String?) {
