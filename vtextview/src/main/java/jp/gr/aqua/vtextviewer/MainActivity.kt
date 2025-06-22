@@ -346,9 +346,9 @@ class MainActivity : AppCompatActivity() {
                         putExtra(EXTRA_END, position)
                     }
                     setResult(Activity.RESULT_OK, intent)
-                    remove() // コールバックを解除して...
-                    onBackPressedDispatcher.onBackPressed() // OSに任せる
                 }
+                remove() // コールバックを解除して...
+                onBackPressedDispatcher.onBackPressed() // OSに任せる
             }
         })
     }
